@@ -1,1 +1,118 @@
-# bus_agentub
+## Passengers request tickets → Supervisors approve → Owners monitor sales.
+
+## User Roles
+
+### Passenger
+
+- Search buses (visible: route, departure time, type, fare).
+    
+- Send booking requests (no boarding point or ticket count initially).
+    
+- Post-acceptance:
+    
+    - Select ticket count and boarding point (from list).
+        
+    - View full bus details and live location.
+        
+- Access confirmed tickets in **My Tickets** (includes boarding point).
+    
+
+### Supervisor (Bus Staff)
+
+- Publish bus trips (route, departure time, type, fare, seat capacity, bus number) — only if bus is registered by Owner.
+    
+- Define boarding points (stop name, GPS coordinates).
+    
+- Accept/reject booking requests (pre-acceptance: sees only request existence).
+    
+- Post-acceptance:
+    
+    - View passenger details and boarding points.
+        
+    - Monitor seat selections.
+        
+- Share live bus location.
+    
+
+### Bus Owner / Company
+
+- Register buses (route, departure time, type, fare, seat capacity, bus number).
+    
+- Manage supervisors.
+    
+- Monitor bookings, sales, and all supervisor operations.
+    
+
+## Booking Flow
+
+1.  **Search & Request**
+    
+    - Passenger searches buses (sees route, time, type, fare only)
+        
+    - Sends booking request (no seat count or boarding point yet).
+        
+2.  **Supervisor Review**
+    
+    - Supervisor sees request existence (no passenger details, seat count or boarding point)
+        
+    - Accepts or rejects request
+        
+3.  **Post-Acceptance**
+    
+    - Passenger: selects ticket count & boarding point, views full details and ETA (Google Maps API).
+        
+    - Supervisor: sees passenger details and boarding points.
+        
+4.  **Ticket Generation**
+    
+    - Ticket generated with ticket count and boarding point
+        
+    - Stored in Passenger’s “My Tickets”
+        
+    - Supervisor sees passenger list with boarding sequence.
+        
+
+## Tech Stack
+
+- **Apps**: Flutter (Passenger & Supervisor)
+    
+- **Admin Panel**: Flutter Web
+    
+- **Backend**: FastAPI (Python)
+    
+- **Database**: PostgreSQL
+    
+- **Real-Time**: WebSockets (booking updates, live location)
+    
+- **Maps**: Google Maps API
+    
+
+## Modules
+
+### 1\. User Module
+
+- **Roles**: Passenger, Supervisor, Owner.
+    
+- **Features**: Registration, login, profile management.
+    
+    - Passenger: name, phone, NID (not exposed in APIs).
+        
+    - Supervisor: name, phone, NID (not exposed in APIs), associated buses.
+        
+    - Owner: company info, manage buses & supervisors.
+        
+
+### 2\. Bus Module
+
+- Add/Edit/Delete buses (Owner/Supervisor).
+- Details: route, departure time, type, seat capacity, fare, bus number.
+- Define boarding points (stop name + GPS).
+- Provide searchable bus listings (route, time, fare).
+
+### 3\. Admin Module (Owner)
+
+- Dashboard: bus & booking summaries.
+    
+- Manage buses & supervisors.
+    
+- View ticket sales and passenger data.
