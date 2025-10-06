@@ -1,0 +1,40 @@
+{
+  "bookings": [
+    {
+      "booking_id": 101,
+      "bus_id": 1,
+      "passenger_id": 10,
+      "passenger_name": "Karim Ahmed",
+      "passenger_phone": "01711111111",
+      "status": "pending",
+      "request_time": "2025-10-01T07:30:00",
+      "accepted_at": null,
+      "rejected_at": null,
+      "rejection_reason": null
+    },
+    {
+      "booking_id": 102,
+      "bus_id": 2,
+      "passenger_id": 10,
+      "passenger_name": "Karim Ahmed",
+      "passenger_phone": "01711111111",
+      "status": "accepted",
+      "request_time": "2025-10-01T07:00:00",
+      "accepted_at": "2025-10-01T07:10:00",
+      "rejected_at": null,
+      "rejection_reason": null
+    },
+    {
+      "booking_id": 103,
+      "bus_id": 1,
+      "passenger_id": 11,
+      "passenger_name": "Ayesha Begum",
+      "passenger_phone": "01722222222",
+      "status": "rejected",
+      "request_time": "2025-09-30T20:00:00",
+      "accepted_at": null,
+      "rejected_at": "2025-09-30T20:15:00",
+      "rejection_reason": "Bus is full"
+    }
+  ]
+}

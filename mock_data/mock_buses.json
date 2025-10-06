@@ -1,0 +1,87 @@
+{
+  "buses": [
+    {
+      "bus_id": 1,
+      "bus_number": "DB-1234",
+      "route_from": "Dhaka",
+      "route_to": "Chittagong",
+      "departure_time": "2025-10-01T08:00:00",
+      "bus_type": "Non-AC",
+      "fare": 500,
+      "seat_capacity": 40,
+      "available_seats": 18,
+      "owner_id": 30,
+      "supervisor_id": 20,
+      "supervisor_name": "Rahim Uddin",
+      "supervisor_phone": "01710000001",
+      "live_location": {
+        "lat": 23.8103,
+        "lng": 90.4125,
+        "updated_at": "2025-10-01T07:45:00"
+      },
+      "boarding_points": [
+        {
+          "id": 1,
+          "name": "Kalabagan",
+          "lat": 23.7461,
+          "lng": 90.3742,
+          "sequence": 1
+        },
+        {
+          "id": 2,
+          "name": "Jatrabari",
+          "lat": 23.7104,
+          "lng": 90.4525,
+          "sequence": 2
+        },
+        {
+          "id": 3,
+          "name": "Signboard",
+          "lat": 23.6911,
+          "lng": 90.5070,
+          "sequence": 3
+        }
+      ],
+      "status": "active",
+      "created_at": "2025-09-20T10:00:00"
+    },
+    {
+      "bus_id": 2,
+      "bus_number": "DB-5678",
+      "route_from": "Dhaka",
+      "route_to": "Sylhet",
+      "departure_time": "2025-10-01T09:30:00",
+      "bus_type": "AC",
+      "fare": 700,
+      "seat_capacity": 36,
+      "available_seats": 15,
+      "owner_id": 30,
+      "supervisor_id": 20,
+      "supervisor_name": "Rahim Uddin",
+      "supervisor_phone": "01710000001",
+      "live_location": {
+        "lat": 23.8103,
+        "lng": 90.4125,
+        "updated_at": "2025-10-01T08:15:00"
+      },
+      "boarding_points": [
+        {
+          "id": 4,
+          "name": "Airport",
+          "lat": 23.8493,
+          "lng": 90.4195,
+          "sequence": 1
+        },
+        {
+          "id": 5,
+          "name": "Uttara",
+          "lat": 23.8767,
+          "lng": 90.3798,
+          "sequence": 2
+        }
+      ],
+      "status": "active",
+      "created_at": "2025-09-21T11:00:00"
+    }
+  ]
+}

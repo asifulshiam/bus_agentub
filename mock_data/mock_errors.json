@@ -1,0 +1,65 @@
+{
+  "error_responses": {
+    "unauthorized": {
+      "status": 401,
+      "error": "Unauthorized",
+      "message": "Invalid or expired token. Please login again."
+    },
+    "forbidden": {
+      "status": 403,
+      "error": "Forbidden",
+      "message": "You don't have permission to access this resource."
+    },
+    "bus_not_found": {
+      "status": 404,
+      "error": "Not Found",
+      "message": "Bus not found."
+    },
+    "booking_not_found": {
+      "status": 404,
+      "error": "Not Found",
+      "message": "Booking not found."
+    },
+    "booking_already_accepted": {
+      "status": 400,
+      "error": "Bad Request",
+      "message": "This booking has already been accepted."
+    },
+    "booking_already_rejected": {
+      "status": 400,
+      "error": "Bad Request",
+      "message": "This booking has already been rejected."
+    },
+    "booking_not_accepted": {
+      "status": 400,
+      "error": "Bad Request",
+      "message": "Cannot confirm ticket. Booking must be accepted first."
+    },
+    "no_seats_available": {
+      "status": 400,
+      "error": "Bad Request",
+      "message": "Not enough seats available. Only 5 seats remaining."
+    },
+    "invalid_boarding_point": {
+      "status": 400,
+      "error": "Bad Request",
+      "message": "Invalid boarding point selected for this bus."
+    },
+    "validation_error": {
+      "status": 422,
+      "error": "Validation Error",
+      "message": "Invalid input data.",
+      "details": [
+        {
+          "field": "phone",
+          "message": "Phone number must be 11 digits starting with 01"
+        }
+      ]
+    },
+    "internal_server_error": {
+      "status": 500,
+      "error": "Internal Server Error",
+      "message": "Something went wrong. Please try again later."
+    }
+  }
+}

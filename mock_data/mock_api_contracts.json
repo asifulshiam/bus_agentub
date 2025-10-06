@@ -1,0 +1,511 @@
+{
+  "api_contracts": {
+    "auth_register": {
+      "endpoint": "POST /auth/register",
+      "auth_required": false,
+      "request": {
+        "name": "Karim Ahmed",
+        "phone": "01711111111",
+        "password": "secure123",
+        "role": "passenger"
+      },
+      "response": {
+        "user_id": 10,
+        "name": "Karim Ahmed",
+        "phone": "01711111111",
+        "role": "passenger",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "message": "Registration successful"
+      }
+    },
+    "auth_login": {
+      "endpoint": "POST /auth/login",
+      "auth_required": false,
+      "request": {
+        "phone": "01711111111",
+        "password": "secure123"
+      },
+      "response": {
+        "user_id": 10,
+        "name": "Karim Ahmed",
+        "phone": "01711111111",
+        "role": "passenger",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "message": "Login successful"
+      }
+    },
+    "auth_get_profile": {
+      "endpoint": "GET /auth/profile",
+      "auth_required": true,
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "user_id": 10,
+        "name": "Karim Ahmed",
+        "phone": "01711111111",
+        "role": "passenger",
+        "created_at": "2025-09-15T10:30:00"
+      }
+    },
+    "auth_update_profile": {
+      "endpoint": "PUT /auth/profile",
+      "auth_required": true,
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "request": {
+        "name": "Karim Ahmed Updated"
+      },
+      "response": {
+        "user_id": 10,
+        "name": "Karim Ahmed Updated",
+        "phone": "01711111111",
+        "role": "passenger",
+        "message": "Profile updated successfully"
+      }
+    },
+    "buses_search": {
+      "endpoint": "GET /buses?from=Dhaka&to=Sylhet&date=2025-10-01",
+      "auth_required": false,
+      "query_params": {
+        "from": "Dhaka",
+        "to": "Sylhet",
+        "date": "2025-10-01"
+      },
+      "response": [
+        {
+          "bus_id": 2,
+          "bus_number": "DB-5678",
+          "route_from": "Dhaka",
+          "route_to": "Sylhet",
+          "departure_time": "2025-10-01T09:30:00",
+          "bus_type": "AC",
+          "fare": 700,
+          "available_seats": 15
+        }
+      ]
+    },
+    "buses_create": {
+      "endpoint": "POST /buses",
+      "auth_required": true,
+      "roles": ["owner", "supervisor"],
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "request": {
+        "bus_number": "DB-9999",
+        "route_from": "Dhaka",
+        "route_to": "Cox's Bazar",
+        "departure_time": "2025-10-02T10:00:00",
+        "bus_type": "AC",
+        "fare": 900,
+        "seat_capacity": 40
+      },
+      "response": {
+        "bus_id": 3,
+        "message": "Bus created successfully"
+      }
+    },
+    "bus_details": {
+      "endpoint": "GET /buses/1",
+      "auth_required": true,
+      "note": "Only accessible after booking is accepted",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "bus_id": 1,
+        "bus_number": "DB-1234",
+        "route_from": "Dhaka",
+        "route_to": "Chittagong",
+        "departure_time": "2025-10-01T08:00:00",
+        "bus_type": "Non-AC",
+        "fare": 500,
+        "seat_capacity": 40,
+        "available_seats": 18,
+        "supervisor_name": "Rahim Uddin",
+        "supervisor_phone": "01710000001",
+        "live_location": {
+          "lat": 23.8103,
+          "lng": 90.4125,
+          "updated_at": "2025-10-01T07:45:00"
+        },
+        "boarding_points": [
+          {
+            "id": 1,
+            "name": "Kalabagan",
+            "lat": 23.7461,
+            "lng": 90.3742,
+            "sequence": 1
+          },
+          {
+            "id": 2,
+            "name": "Jatrabari",
+            "lat": 23.7104,
+            "lng": 90.4525,
+            "sequence": 2
+          }
+        ]
+      }
+    },
+    "bus_update": {
+      "endpoint": "PUT /buses/1",
+      "auth_required": true,
+      "roles": ["owner", "supervisor"],
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "request": {
+        "fare": 550,
+        "available_seats": 20
+      },
+      "response": {
+        "bus_id": 1,
+        "message": "Bus updated successfully"
+      }
+    },
+    "bus_delete": {
+      "endpoint": "DELETE /buses/1",
+      "auth_required": true,
+      "roles": ["owner", "supervisor"],
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "message": "Bus deleted successfully"
+      }
+    },
+    "bus_add_stop": {
+      "endpoint": "POST /buses/1/stops",
+      "auth_required": true,
+      "roles": ["supervisor"],
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "request": {
+        "name": "Farmgate",
+        "lat": 23.7561,
+        "lng": 90.3872,
+        "sequence": 4
+      },
+      "response": {
+        "stop_id": 6,
+        "message": "Boarding point added successfully"
+      }
+    },
+    "bus_get_stops": {
+      "endpoint": "GET /buses/1/stops",
+      "auth_required": true,
+      "note": "Only accessible after booking is accepted",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": [
+        {
+          "id": 1,
+          "name": "Kalabagan",
+          "lat": 23.7461,
+          "lng": 90.3742,
+          "sequence": 1
+        },
+        {
+          "id": 2,
+          "name": "Jatrabari",
+          "lat": 23.7104,
+          "lng": 90.4525,
+          "sequence": 2
+        }
+      ]
+    },
+    "booking_request": {
+      "endpoint": "POST /booking/request",
+      "auth_required": true,
+      "roles": ["passenger"],
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "request": {
+        "bus_id": 1
+      },
+      "response": {
+        "booking_id": 101,
+        "bus_id": 1,
+        "status": "pending",
+        "message": "Booking request sent to supervisor",
+        "request_time": "2025-10-01T07:30:00"
+      }
+    },
+    "booking_get_requests": {
+      "endpoint": "GET /booking/requests?bus_id=1&page=1&limit=20",
+      "auth_required": true,
+      "roles": ["supervisor"],
+      "note": "Supervisor sees only request existence, NO passenger details before acceptance",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "query_params": {
+        "bus_id": 1,
+        "page": 1,
+        "limit": 20
+      },
+      "response": {
+        "total": 5,
+        "page": 1,
+        "limit": 20,
+        "requests": [
+          {
+            "booking_id": 101,
+            "bus_id": 1,
+            "status": "pending",
+            "request_time": "2025-10-01T07:30:00"
+          },
+          {
+            "booking_id": 104,
+            "bus_id": 1,
+            "status": "pending",
+            "request_time": "2025-10-01T07:35:00"
+          }
+        ]
+      }
+    },
+    "booking_accept": {
+      "endpoint": "POST /booking/accept",
+      "auth_required": true,
+      "roles": ["supervisor"],
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "request": {
+        "booking_id": 101
+      },
+      "response": {
+        "booking_id": 101,
+        "bus_id": 1,
+        "bus_number": "DB-1234",
+        "departure_time": "2025-10-01T08:00:00",
+        "status": "accepted",
+        "passenger_name": "Karim Ahmed",
+        "passenger_phone": "01711111111",
+        "supervisor_name": "Rahim Uddin",
+        "supervisor_phone": "01710000001",
+        "available_seats": 18,
+        "available_boarding_points": [
+          {
+            "id": 1,
+            "name": "Kalabagan",
+            "lat": 23.7461,
+            "lng": 90.3742,
+            "sequence": 1
+          },
+          {
+            "id": 2,
+            "name": "Jatrabari",
+            "lat": 23.7104,
+            "lng": 90.4525,
+            "sequence": 2
+          }
+        ],
+        "message": "Booking accepted. Passenger can now select seats and boarding point."
+      }
+    },
+    "booking_reject": {
+      "endpoint": "POST /booking/reject",
+      "auth_required": true,
+      "roles": ["supervisor"],
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "request": {
+        "booking_id": 101,
+        "reason": "Bus is full"
+      },
+      "response": {
+        "booking_id": 101,
+        "status": "rejected",
+        "reason": "Bus is full",
+        "message": "Booking request rejected"
+      }
+    },
+    "ticket_confirm": {
+      "endpoint": "POST /ticket/confirm",
+      "auth_required": true,
+      "roles": ["passenger"],
+      "note": "Can only be done after booking is accepted",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "request": {
+        "booking_id": 101,
+        "boarding_point_id": 2,
+        "seats": 2
+      },
+      "response": {
+        "ticket_id": 501,
+        "booking_id": 101,
+        "status": "confirmed",
+        "seats_booked": 2,
+        "boarding_point": {
+          "id": 2,
+          "name": "Jatrabari",
+          "lat": 23.7104,
+          "lng": 90.4525
+        },
+        "fare_per_seat": 500,
+        "total_fare": 1000,
+        "message": "Ticket confirmed successfully"
+      }
+    },
+    "tickets_get_mine": {
+      "endpoint": "GET /tickets/mine?status=confirmed&page=1&limit=20",
+      "auth_required": true,
+      "roles": ["passenger"],
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "query_params": {
+        "status": "confirmed",
+        "page": 1,
+        "limit": 20
+      },
+      "response": {
+        "total": 1,
+        "page": 1,
+        "limit": 20,
+        "tickets": [
+          {
+            "ticket_id": 501,
+            "bus_id": 2,
+            "bus_number": "DB-5678",
+            "route_from": "Dhaka",
+            "route_to": "Sylhet",
+            "departure_time": "2025-10-01T09:30:00",
+            "bus_type": "AC",
+            "supervisor_name": "Rahim Uddin",
+            "supervisor_phone": "01710000001",
+            "seats_booked": 2,
+            "boarding_point": {
+              "id": 4,
+              "name": "Airport",
+              "lat": 23.8493,
+              "lng": 90.4195
+            },
+            "total_fare": 1400,
+            "status": "confirmed",
+            "confirmed_at": "2025-10-01T07:15:00"
+          }
+        ]
+      }
+    },
+    "admin_dashboard": {
+      "endpoint": "GET /admin/dashboard",
+      "auth_required": true,
+      "roles": ["owner"],
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "total_buses": 10,
+        "active_trips": 5,
+        "total_bookings": 120,
+        "confirmed_tickets": 95,
+        "pending_requests": 15,
+        "total_revenue": 45000,
+        "today_bookings": 12,
+        "today_revenue": 8400
+      }
+    },
+    "admin_get_buses": {
+      "endpoint": "GET /admin/buses?supervisor_id=20&page=1&limit=20",
+      "auth_required": true,
+      "roles": ["owner"],
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "query_params": {
+        "supervisor_id": 20,
+        "page": 1,
+        "limit": 20
+      },
+      "response": {
+        "total": 2,
+        "page": 1,
+        "limit": 20,
+        "buses": [
+          {
+            "bus_id": 1,
+            "bus_number": "DB-1234",
+            "route_from": "Dhaka",
+            "route_to": "Chittagong",
+            "supervisor_name": "Rahim Uddin",
+            "supervisor_phone": "01710000001",
+            "total_bookings": 45,
+            "confirmed_tickets": 38,
+            "revenue": 19000,
+            "status": "active"
+          },
+          {
+            "bus_id": 2,
+            "bus_number": "DB-5678",
+            "route_from": "Dhaka",
+            "route_to": "Sylhet",
+            "supervisor_name": "Rahim Uddin",
+            "supervisor_phone": "01710000001",
+            "total_bookings": 35,
+            "confirmed_tickets": 30,
+            "revenue": 21000,
+            "status": "active"
+          }
+        ]
+      }
+    },
+    "admin_get_tickets": {
+      "endpoint": "GET /admin/tickets?from_date=2025-09-01&to_date=2025-09-30&page=1&limit=20",
+      "auth_required": true,
+      "roles": ["owner"],
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "query_params": {
+        "from_date": "2025-09-01",
+        "to_date": "2025-09-30",
+        "page": 1,
+        "limit": 20
+      },
+      "response": {
+        "total_revenue": 45000,
+        "total_tickets_sold": 90,
+        "date_range": {
+          "from": "2025-09-01",
+          "to": "2025-09-30"
+        },
+        "breakdown_by_bus": [
+          {
+            "bus_id": 1,
+            "bus_number": "DB-1234",
+            "tickets_sold": 50,
+            "revenue": 25000
+          },
+          {
+            "bus_id": 2,
+            "bus_number": "DB-5678",
+            "tickets_sold": 40,
+            "revenue": 28000
+          }
+        ],
+        "breakdown_by_date": [
+          {
+            "date": "2025-09-25",
+            "tickets_sold": 12,
+            "revenue": 8400
+          },
+          {
+            "date": "2025-09-26",
+            "tickets_sold": 15,
+            "revenue": 10500
+          }
+        ]
+      }
+    }
+  }
+}

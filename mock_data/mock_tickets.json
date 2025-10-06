@@ -1,0 +1,31 @@
+{
+  "tickets": [
+    {
+      "ticket_id": 501,
+      "booking_id": 102,
+      "passenger_id": 10,
+      "passenger_name": "Karim Ahmed",
+      "passenger_phone": "01711111111",
+      "bus_id": 2,
+      "bus_number": "DB-5678",
+      "route_from": "Dhaka",
+      "route_to": "Sylhet",
+      "departure_time": "2025-10-01T09:30:00",
+      "bus_type": "AC",
+      "supervisor_name": "Rahim Uddin",
+      "supervisor_phone": "01710000001",
+      "seats_booked": 2,
+      "boarding_point": {
+        "id": 4,
+        "name": "Airport",
+        "lat": 23.8493,
+        "lng": 90.4195
+      },
+      "fare_per_seat": 700,
+      "total_fare": 1400,
+      "status": "confirmed",
+      "confirmed_at": "2025-10-01T07:15:00",
+      "created_at": "2025-10-01T07:15:00"
+    }
+  ]
+}

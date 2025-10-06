@@ -1,0 +1,66 @@
+{
+  "websocket_events": {
+    "booking_accepted": {
+      "event": "booking_accepted",
+      "booking_id": 101,
+      "bus_id": 1,
+      "bus_number": "DB-1234",
+      "departure_time": "2025-10-01T08:00:00",
+      "status": "accepted",
+      "passenger_name": "Karim Ahmed",
+      "passenger_phone": "01711111111",
+      "supervisor_name": "Rahim Uddin",
+      "supervisor_phone": "01710000001",
+      "available_seats": 18,
+      "available_boarding_points": [
+        {
+          "id": 1,
+          "name": "Kalabagan",
+          "lat": 23.7461,
+          "lng": 90.3742
+        },
+        {
+          "id": 2,
+          "name": "Jatrabari",
+          "lat": 23.7104,
+          "lng": 90.4525
+        }
+      ],
+      "timestamp": "2025-10-01T07:35:00"
+    },
+    "booking_rejected": {
+      "event": "booking_rejected",
+      "booking_id": 103,
+      "bus_id": 1,
+      "status": "rejected",
+      "reason": "Bus is full",
+      "timestamp": "2025-09-30T20:15:00"
+    },
+    "ticket_confirmed": {
+      "event": "ticket_confirmed",
+      "ticket_id": 501,
+      "booking_id": 101,
+      "bus_id": 1,
+      "status": "confirmed",
+      "seats_booked": 2,
+      "boarding_point": {
+        "id": 2,
+        "name": "Jatrabari",
+        "lat": 23.7104,
+        "lng": 90.4525
+      },
+      "total_fare": 1000,
+      "timestamp": "2025-10-01T07:40:00"
+    },
+    "location_update": {
+      "event": "location_update",
+      "bus_id": 1,
+      "bus_number": "DB-1234",
+      "lat": 23.8103,
+      "lng": 90.4125,
+      "speed": 45,
+      "heading": 180,
+      "timestamp": "2025-10-01T07:45:00"
+    }
+  }
+}

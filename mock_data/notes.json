@@ -1,0 +1,21 @@
+{
+  "notes": {
+    "privacy": "Passenger NID is never sent to frontend; only supervisor/owner sees NID in backend.",
+    "visibility_rules": {
+      "before_acceptance": "Supervisor sees only booking_id, bus_id, status. NO passenger details.",
+      "after_acceptance": "Both passenger and supervisor see each other's name and phone.",
+      "bus_details": "Full bus details (boarding points, live location) only visible after booking acceptance."
+    },
+    "usage": "Frontend can render UI, simulate API calls, and test real-time updates without backend.",
+    "authentication": "All protected endpoints require 'Authorization: Bearer {token}' header.",
+    "pagination": "List endpoints support ?page=1&limit=20 query parameters.",
+    "websocket_connection": "Connect to /ws/booking for booking updates, /ws/location/{bus_id} for live location tracking.",
+    "date_format": "All timestamps follow ISO 8601 format: YYYY-MM-DDTHH:MM:SS",
+    "phone_format": "Bangladeshi phone numbers: 11 digits starting with 01",
+    "roles": {
+      "passenger": "Can search buses, send booking requests, confirm tickets, view own tickets",
+      "supervisor": "Can publish buses, manage boarding points, accept/reject requests, share live location",
+      "owner": "Can register buses, manage supervisors, view all operations and reports"
+    }
+  }
+}
