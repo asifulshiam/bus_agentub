@@ -34,7 +34,7 @@
 - Share live bus location.
     
 
-### Bus Owner / Company
+### Bus Owner
 
 - Register buses (route, departure time, type, fare, seat capacity, bus number).
     
@@ -76,7 +76,7 @@
 
 - **Apps**: Flutter (Passenger & Supervisor)
     
-- **Admin Panel**: Flutter Web
+- **Owner Panel**: Flutter/Flutter Web
     
 - **Backend**: FastAPI (Python)
     
@@ -109,10 +109,74 @@
 - Define boarding points (stop name + GPS).
 - Provide searchable bus listings (route, time, fare).
 
-### 3\. Admin Module (Owner)
+### 3\. Booking Module
+
+- Passenger: send booking request.
+- Supervisor: accept/reject request.
+- Post-acceptance: passenger selects seat count & boarding point → ticket generated.
+- Track available seats.
+- Supervisor: view passenger list + boarding sequence.
+
+### 4\. Real-Time & Map Module
+
+- WebSockets for booking and acceptance updates.
+    
+- Real-time bus location sharing (after acceptance).
+    
+- Google Maps integration:
+    
+    - Display live bus marker & route.
+        
+    - Highlight passenger’s boarding point.
+        
+    - Calculate ETA.
+        
+
+### 5\. Owner Module
 
 - Dashboard: bus & booking summaries.
     
 - Manage buses & supervisors.
     
 - View ticket sales and passenger data.
+    
+
+* * *
+
+## Screens
+
+### Passenger App (Flutter)
+
+- Registration/Login.
+    
+- Bus Search & Results (route, departure time, type, fare).
+    
+- Send Booking Request.
+    
+- Ticket Confirmation (post-acceptance): select seats & boarding point, view ETA.
+    
+- My Tickets: confirmed tickets.
+    
+- Real-Time Map: live bus & boarding point.
+    
+
+**Supervisor App (Flutter)**
+
+- Registration/Login.
+    
+- Published Buses (assigned).
+    
+- Manage Requests: view/accept/reject.
+    
+- Passenger List (confirmed bookings + boarding points).
+    
+- Real-Time Map (bus + boarding points).
+    
+
+### Owner Panel (Flutter Web)
+
+- Dashboard: bus & booking overview.
+    
+- Manage buses & supervisors.
+    
+- Ticket sales & reports.
