@@ -166,9 +166,9 @@
 
 * * *
 
-## **4\. Admin Module**
+## **4\. Owner Module**
 
-### **GET /admin/dashboard**
+### **GET /owner/dashboard**
 
 **Response JSON**
 
@@ -188,7 +188,7 @@
 | total_bookings | bookings | COUNT(\*) | All bookings |
 | total_revenue | tickets | SUM(total_fare) WHERE status=‘confirmed’ | Total revenue |
 
-### **GET /admin/buses**
+### **GET /owner/buses**
 
 **Response JSON**
 

@@ -21,10 +21,16 @@
 | **Booking** | `/tickets/mine` | GET | Yes (Passenger) | Get my tickets | Query: `?status=confirmed&page=1` | `[{ticket_id, bus_id, departure_time, boarding_point, seats_booked}]` |
 | **Real-Time** | `/ws/booking` | WebSocket | Yes | Booking status updates | \-  | Events: `booking_accepted`, `booking_rejected`, `ticket_confirmed` |
 | **Real-Time** | `/ws/location/{bus_id}` | WebSocket | Yes (after acceptance) | Live bus location | \-  | Events: `location_update` with `{lat, lng}` |
-| **Admin** | `/admin/dashboard` | GET | Yes (Owner) | Dashboard overview | \-  | `{total_buses, active_trips, total_bookings, total_revenue}` |
-| **Admin** | `/admin/buses` | GET | Yes (Owner) | List all buses | Query: `?supervisor_id=&page=1` | `[{bus_id, bus_number, supervisor_name, bookings_count}]` |
-| **Admin** | `/admin/tickets` | GET | Yes (Owner) | Ticket sales report | Query: `?from_date=&to_date=` | `{total_revenue, tickets_sold, breakdown_by_bus}` |
+| **Owner** | `/owner/dashboard` | GET | Yes (Owner) | Dashboard overview | \-  | `{total_buses, active_trips, total_bookings, total_revenue}` |
+| **Owner** | `/owner/buses` | GET | Yes (Owner) | List all buses | Query: `?supervisor_id=&page=1` | `[{bus_id, bus_number, supervisor_name, bookings_count}]` |
+| **Owner** | `/owner/tickets` | GET | Yes (Owner) | Ticket sales report | Query: `?from_date=&to_date=` | `{total_revenue, tickets_sold, breakdown_by_bus}` |
 
 * * *
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
 
 &nbsp;
