@@ -16,7 +16,6 @@
         
 - Access confirmed tickets in **My Tickets** (includes boarding point).
     
-
 ### Supervisor (Bus Staff)
 
 - Publish bus trips (route, departure time, type, fare, seat capacity, bus number) — only if bus is registered by Owner.
@@ -33,7 +32,6 @@
         
 - Share live bus location.
     
-
 ### Bus Owner
 
 - Register buses (route, departure time, type, fare, seat capacity, bus number).
@@ -42,7 +40,6 @@
     
 - Monitor bookings, sales, and all supervisor operations.
     
-
 ## Booking Flow
 
 1.  **Search & Request**
@@ -71,7 +68,6 @@
         
     - Supervisor sees passenger list with boarding sequence.
         
-
 ## Tech Stack
 
 - **Apps**: Flutter (Passenger & Supervisor)
@@ -86,7 +82,6 @@
     
 - **Maps**: Google Maps API
     
-
 ## Modules
 
 ### 1\. User Module
@@ -101,7 +96,6 @@
         
     - Owner: company info, manage buses & supervisors.
         
-
 ### 2\. Bus Module
 
 - Add/Edit/Delete buses (Owner/Supervisor).
@@ -131,7 +125,6 @@
         
     - Calculate ETA.
         
-
 ### 5\. Owner Module
 
 - Dashboard: bus & booking summaries.
@@ -140,7 +133,6 @@
     
 - View ticket sales and passenger data.
     
-
 * * *
 
 ## Screens
@@ -159,8 +151,7 @@
     
 - Real-Time Map: live bus & boarding point.
     
-
-**Supervisor App (Flutter)**
+### Supervisor App (Flutter)
 
 - Registration/Login.
     
@@ -172,7 +163,6 @@
     
 - Real-Time Map (bus + boarding points).
     
-
 ### Owner Panel (Flutter Web)
 
 - Dashboard: bus & booking overview.
