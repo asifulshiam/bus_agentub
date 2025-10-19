@@ -1,15 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from app.config import settings
-from app.routers import auth
+from app.routers import auth, buses
 
 # Create FastAPI application
 app = FastAPI(
     title=settings.APP_NAME,
     description="Privacy-first bus booking system with real-time tracking",
     version="1.0.0",
-    debug=settings.DEBUG,
+    debug=settings.DEBUG
 )
 
 # Configure CORS for frontend
@@ -23,6 +22,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router)
+app.include_router(buses.router)
 
 
 @app.get("/")
@@ -33,11 +33,14 @@ def read_root():
         "version": "1.0.0",
         "status": "operational",
         "docs": "/docs",
-        "redoc": "/redoc",
+        "redoc": "/redoc"
     }
 
 
 @app.get("/health")
 def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "database": "connected"}
+    return {
+        "status": "healthy",
+        "database": "connected"
+    }

@@ -88,7 +88,7 @@ def require_roles(allowed_roles: List[UserRole]):
 # Convenience dependencies for specific roles
 def get_current_passenger(current_user: User = Depends(get_current_user)) -> User:
     """Dependency to ensure current user is a passenger"""
-    if current_user.role != UserRole.PASSENGER:
+    if current_user.role.value != "passenger":  # Add .value
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only passengers can access this endpoint",
@@ -98,7 +98,7 @@ def get_current_passenger(current_user: User = Depends(get_current_user)) -> Use
 
 def get_current_supervisor(current_user: User = Depends(get_current_user)) -> User:
     """Dependency to ensure current user is a supervisor"""
-    if current_user.role != UserRole.SUPERVISOR:
+    if current_user.role.value != "supervisor":  # Add .value
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only supervisors can access this endpoint",
@@ -108,7 +108,7 @@ def get_current_supervisor(current_user: User = Depends(get_current_user)) -> Us
 
 def get_current_owner(current_user: User = Depends(get_current_user)) -> User:
     """Dependency to ensure current user is an owner"""
-    if current_user.role != UserRole.OWNER:
+    if current_user.role.value != "owner":  # Add .value
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only owners can access this endpoint",
