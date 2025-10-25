@@ -29,6 +29,9 @@ class Settings(BaseSettings):
         "*"  # Allow all origins for development
     ]
 
+    # Google Maps API
+    GOOGLE_MAPS_API_KEY: str = ""
+
     class Config:
         env_file = ".env"
         case_sensitive = True
