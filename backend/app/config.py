@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     # CORS (for frontend)
     CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:8080"]
 
+    # Google Maps API
+    GOOGLE_MAPS_API_KEY: str = ""
+
     class Config:
         env_file = ".env"
         case_sensitive = True
