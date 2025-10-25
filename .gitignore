@@ -17,6 +17,7 @@ htmlcov/
 .env
 .env.local
 *.log
+init_db.py
 
 # Flutter
 .dart_tool/

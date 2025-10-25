@@ -1,5 +1,8 @@
 import 'package:busapp/homepage.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class login extends StatefulWidget {
   const login({super.key});
@@ -9,8 +12,77 @@ class login extends StatefulWidget {
 }
 
 class _loginState extends State<login> {
-  final _usernameController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _login() async {
+    if (_phoneController.text.isEmpty || _passwordController.text.isEmpty) {
+      _showErrorDialog('Please enter both phone number and password');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:8000/auth/login'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'phone': _phoneController.text,
+          'password': _passwordController.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        // Save token and user data
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('access_token', data['access_token']);
+        await prefs.setString('user_data', jsonEncode(data['user']));
+        
+        // Navigate to homepage
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
+        }
+      } else {
+        final errorData = jsonDecode(response.body);
+        _showErrorDialog(errorData['detail'] ?? 'Login failed');
+      }
+    } catch (e) {
+      _showErrorDialog('Network error: ${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Login Failed'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +104,9 @@ class _loginState extends State<login> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             TextField(
-              controller: _usernameController,
+              controller: _phoneController,
               decoration: const InputDecoration(
-                labelText: 'Username',
+                labelText: 'Phone Number',
                 labelStyle: TextStyle(color: Colors.black),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.black),
@@ -44,6 +116,7 @@ class _loginState extends State<login> {
                 ),
               ),
               style: const TextStyle(color: Colors.black),
+              keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 16.0),
             TextField(
@@ -67,17 +140,12 @@ class _loginState extends State<login> {
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
               ),
-              onPressed: () {
-                if (_usernameController.text == 'user' &&
-                    _passwordController.text == 'password') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
-                  );
-                }
-              },
-              child: const Text('Login'),
+              onPressed: _isLoading ? null : _login,
+              child: _isLoading 
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text('Login'),
             ),
+            const SizedBox(height: 16.0),
           ],
         ),
       ),
