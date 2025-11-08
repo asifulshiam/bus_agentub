@@ -52,3 +52,8 @@ Thumbs.db
 *.key
 config/secrets.yml
 backend/*.db
+QUICK_START.md
+SETUP_INSTRUCTIONS.md
+
+setup.bat
+setup.sh

@@ -18,8 +18,8 @@ from ..database import Base
 
 class BusType(enum.Enum):
     AC = "AC"
-    NON_AC = "Non-AC"
-    AC_SLEEPER = "AC Sleeper"
+    NON_AC = "NON_AC"
+    AC_SLEEPER = "AC_SLEEPER"
 
 
 class Bus(Base):

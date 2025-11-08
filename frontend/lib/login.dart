@@ -1,4 +1,5 @@
 import 'package:busapp/homepage.dart';
+import 'package:busapp/admin_login.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -28,7 +29,7 @@ class _loginState extends State<login> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8000/auth/login'),
+        Uri.parse('http://127.0.0.1:8000/auth/login'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -40,11 +41,14 @@ class _loginState extends State<login> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        final user = data['user'];
         
         // Save token and user data
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', data['access_token']);
-        await prefs.setString('user_data', jsonEncode(data['user']));
+        await prefs.setString('user_data', jsonEncode(user));
+        await prefs.setString('user_role', user['role']);
+        await prefs.setBool('is_admin', false); // Regular user login
         
         // Navigate to homepage
         if (mounted) {
@@ -139,13 +143,51 @@ class _loginState extends State<login> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
               ),
               onPressed: _isLoading ? null : _login,
               child: _isLoading 
                 ? const CircularProgressIndicator(color: Colors.white)
-                : const Text('Login'),
+                : const Text('Login', style: TextStyle(fontSize: 16)),
             ),
             const SizedBox(height: 16.0),
+            // Divider
+            Row(
+              children: [
+                Expanded(child: Divider(color: Colors.grey[400])),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    'OR',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ),
+                Expanded(child: Divider(color: Colors.grey[400])),
+              ],
+            ),
+            const SizedBox(height: 16.0),
+            // Admin Login Button
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black,
+                side: const BorderSide(color: Colors.black, width: 1.5),
+                minimumSize: const Size(double.infinity, 50),
+              ),
+              onPressed: _isLoading ? null : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminLogin()),
+                );
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.admin_panel_settings, size: 20),
+                  const SizedBox(width: 8),
+                  const Text('Login as Admin', style: TextStyle(fontSize: 16)),
+                ],
+              ),
+            ),
           ],
         ),
       ),

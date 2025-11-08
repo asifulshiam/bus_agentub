@@ -4,6 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:busapp/homepage.dart';
+import 'package:busapp/login.dart';
 
 class AvailableRoutesPage extends StatefulWidget {
   const AvailableRoutesPage({super.key});
@@ -36,7 +38,7 @@ class _AvailableRoutesPageState extends State<AvailableRoutesPage> {
 
       // Fetch buses from API
       final response = await http.get(
-        Uri.parse('http://localhost:8000/buses'),
+        Uri.parse('http://127.0.0.1:8000/buses'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -54,7 +56,7 @@ class _AvailableRoutesPageState extends State<AvailableRoutesPage> {
           
           // Fetch boarding points for this bus
           final stopsResponse = await http.get(
-            Uri.parse('http://localhost:8000/buses/${bus['id']}/stops'),
+            Uri.parse('http://127.0.0.1:8000/buses/${bus['id']}/stops'),
             headers: {
               'Content-Type': 'application/json',
             },
@@ -74,11 +76,23 @@ class _AvailableRoutesPageState extends State<AvailableRoutesPage> {
           final departureTime = DateTime.parse(bus['departure_time']);
           final formattedTime = '${departureTime.hour.toString().padLeft(2, '0')}:${departureTime.minute.toString().padLeft(2, '0')}';
           
+          // Format bus type for display
+          String formatBusType(String busType) {
+            switch (busType) {
+              case 'NON_AC':
+                return 'Non-AC';
+              case 'AC_SLEEPER':
+                return 'AC Sleeper';
+              default:
+                return busType;
+            }
+          }
+          
           routesWithStops.add({
             'id': bus['id'].toString(),
             'name': '${bus['route_from']} - ${bus['route_to']}',
             'busNumber': bus['bus_number'],
-            'type': bus['bus_type'],
+            'type': formatBusType(bus['bus_type']),
             'fare': double.parse(bus['fare'].toString()),
             'departureTime': formattedTime,
             'availableSeats': bus['available_seats'],
@@ -167,7 +181,12 @@ class _AvailableRoutesPageState extends State<AvailableRoutesPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
                     children: [
-                      _buildNavButton(Icons.home, 'HOME', true),
+                      _buildNavButton(Icons.home, 'HOME', true, onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const HomePage()),
+                        );
+                      }),
                       const SizedBox(height: 8),
                       _buildNavButton(Icons.inbox, 'INBOX', false),
                       const SizedBox(height: 20),
@@ -190,8 +209,18 @@ class _AvailableRoutesPageState extends State<AvailableRoutesPage> {
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        // Handle logout
+                      onPressed: () async {
+                        // Clear stored data
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.clear();
+                        
+                        // Navigate to login page
+                        if (mounted) {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (context) => const login()),
+                            (Route<dynamic> route) => false,
+                          );
+                        }
                       },
                       icon: Icon(Icons.power_settings_new, color: Colors.white),
                       label: Text('LOGOUT', style: TextStyle(color: Colors.white)),
@@ -432,13 +461,13 @@ class _AvailableRoutesPageState extends State<AvailableRoutesPage> {
     );
   }
 
-  Widget _buildNavButton(IconData icon, String label, bool isSelected) {
+  Widget _buildNavButton(IconData icon, String label, bool isSelected, {VoidCallback? onTap}) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 4),
       child: ElevatedButton.icon(
-        onPressed: () {
-          // Handle navigation
+        onPressed: onTap ?? () {
+          // Handle navigation for other buttons
         },
         icon: Icon(icon, color: Colors.white, size: 20),
         label: Text(

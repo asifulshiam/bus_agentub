@@ -12,10 +12,10 @@ INSERT INTO users (name, phone, password_hash, nid, role) VALUES
 -- BUSES (owned by Hasan Transport, assigned supervisors)
 -- =====================================================
 INSERT INTO buses (bus_number, route_from, route_to, departure_time, bus_type, fare, seat_capacity, available_seats, owner_id, supervisor_id) VALUES
-('DB-1234', 'Dhaka', 'Chittagong', '2025-10-05 08:00:00', 'Non-AC', 500, 40, 40, 5, 3),
+('DB-1234', 'Dhaka', 'Chittagong', '2025-10-05 08:00:00', 'NON_AC', 500, 40, 40, 5, 3),
 ('DB-5678', 'Dhaka', 'Sylhet', '2025-10-05 09:30:00', 'AC', 700, 36, 36, 5, 3),
-('DB-9012', 'Dhaka', 'Cox''s Bazar', '2025-10-05 22:00:00', 'AC Sleeper', 1200, 30, 30, 5, 4),
-('DB-3456', 'Dhaka', 'Rajshahi', '2025-10-05 07:00:00', 'Non-AC', 450, 40, 40, 5, 4);
+('DB-9012', 'Dhaka', 'Cox''s Bazar', '2025-10-05 22:00:00', 'AC_SLEEPER', 1200, 30, 30, 5, 4),
+('DB-3456', 'Dhaka', 'Rajshahi', '2025-10-05 07:00:00', 'NON_AC', 450, 40, 40, 5, 4);
 
 -- =====================================================
 -- BOARDING POINTS (stops for each bus)
