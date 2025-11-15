@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
+from sqlalchemy.orm import joinedload
 
 from app.database import get_db
 from app.models.user import User
@@ -43,7 +44,7 @@ def create_booking_request(
 ):
     """
     Send a booking request (PASSENGER only)
-    
+
     Creates a pending booking request for a specific bus.
     Passenger details are not shown to supervisor until accepted.
     """
@@ -54,37 +55,37 @@ def create_booking_request(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Bus not found"
         )
-    
+
     if not bus.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Bus is no longer available"
         )
-    
+
     # Check if user already has a pending/accepted booking for this bus
     existing_booking = db.query(Booking).filter(
         Booking.passenger_id == current_user.id,
         Booking.bus_id == booking_data.bus_id,
         Booking.status.in_([BookingStatus.pending, BookingStatus.accepted])
     ).first()
-    
+
     if existing_booking:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You already have a booking request for this bus"
         )
-    
+
     # Create new booking request
     new_booking = Booking(
         passenger_id=current_user.id,
         bus_id=booking_data.bus_id,
         status=BookingStatus.pending
     )
-    
+
     db.add(new_booking)
     db.commit()
     db.refresh(new_booking)
-    
+
     return BookingStatusResponse(
         booking_id=new_booking.id,
         status=new_booking.status,
@@ -102,13 +103,13 @@ def get_booking_requests(
 ):
     """
     View pending booking requests (SUPERVISOR only)
-    
+
     Returns basic booking info without passenger details.
     Passenger details are only shown after acceptance.
     """
     # Build query - only pending requests
     query = db.query(Booking).filter(Booking.status == BookingStatus.pending)
-    
+
     # Filter by bus_id if supervisor is assigned to specific buses
     if bus_id:
         query = query.filter(Booking.bus_id == bus_id)
@@ -122,11 +123,11 @@ def get_booking_requests(
     else:
         # If no bus_id specified, only show buses assigned to this supervisor
         query = query.join(Bus).filter(Bus.supervisor_id == current_user.id)
-    
+
     # Apply pagination
     offset = (page - 1) * limit
     bookings = query.offset(offset).limit(limit).all()
-    
+
     return [BookingBasicResponse.model_validate(booking) for booking in bookings]
 
 
@@ -138,7 +139,7 @@ def accept_booking(
 ):
     """
     Accept a booking request (SUPERVISOR only)
-    
+
     Changes booking status to accepted and returns passenger details
     along with available boarding points.
     """
@@ -149,7 +150,7 @@ def accept_booking(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Booking not found"
         )
-    
+
     # Verify supervisor has access to this bus
     bus = db.query(Bus).filter(Bus.id == booking.bus_id).first()
     if not bus or bus.supervisor_id != current_user.id:
@@ -157,33 +158,33 @@ def accept_booking(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to manage bookings for this bus"
         )
-    
+
     # Check if booking is still pending
     if booking.status != BookingStatus.pending:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Booking is already {booking.status.value}"
         )
-    
+
     # Check if bus has available seats
     if bus.available_seats <= 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No seats available on this bus"
         )
-    
+
     # Update booking status
     booking.status = BookingStatus.accepted
     booking.accepted_time = datetime.utcnow()
-    
+
     # Get passenger details
     passenger = db.query(User).filter(User.id == booking.passenger_id).first()
-    
+
     # Get available boarding points for this bus
     boarding_points = db.query(BoardingPoint).filter(
         BoardingPoint.bus_id == booking.bus_id
     ).order_by(BoardingPoint.sequence_order).all()
-    
+
     boarding_points_data = [
         {
             "id": bp.id,
@@ -194,9 +195,9 @@ def accept_booking(
         }
         for bp in boarding_points
     ]
-    
+
     db.commit()
-    
+
     return BookingAcceptanceResponse(
         booking_id=booking.id,
         status=booking.status,
@@ -214,7 +215,7 @@ def reject_booking(
 ):
     """
     Reject a booking request (SUPERVISOR only)
-    
+
     Changes booking status to rejected with optional reason.
     """
     # Get the booking
@@ -224,7 +225,7 @@ def reject_booking(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Booking not found"
         )
-    
+
     # Verify supervisor has access to this bus
     bus = db.query(Bus).filter(Bus.id == booking.bus_id).first()
     if not bus or bus.supervisor_id != current_user.id:
@@ -232,21 +233,21 @@ def reject_booking(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to manage bookings for this bus"
         )
-    
+
     # Check if booking is still pending
     if booking.status != BookingStatus.pending:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Booking is already {booking.status.value}"
         )
-    
+
     # Update booking status
     booking.status = BookingStatus.rejected
     booking.rejected_time = datetime.utcnow()
     booking.rejection_reason = reject_data.reason
-    
+
     db.commit()
-    
+
     return BookingStatusResponse(
         booking_id=booking.id,
         status=booking.status,
@@ -262,7 +263,7 @@ def cancel_booking(
 ):
     """
     Cancel a booking (PASSENGER or SUPERVISOR)
-    
+
     Passengers can cancel their own bookings.
     Supervisors can cancel bookings for their assigned buses.
     """
@@ -273,48 +274,48 @@ def cancel_booking(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Booking not found"
         )
-    
+
     # Check permissions
     is_passenger = (
-        current_user.role.value == "passenger" and 
+        current_user.role.value == "passenger" and
         booking.passenger_id == current_user.id
     )
-    
+
     bus = db.query(Bus).filter(Bus.id == booking.bus_id).first()
     is_supervisor = (
-        current_user.role.value == "supervisor" and 
+        current_user.role.value == "supervisor" and
         bus and bus.supervisor_id == current_user.id
     )
-    
+
     if not (is_passenger or is_supervisor):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to cancel this booking"
         )
-    
+
     # Check if booking can be cancelled
     if booking.status in [BookingStatus.rejected, BookingStatus.cancelled]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Booking is already {booking.status.value}"
         )
-    
+
     # If ticket exists, cancel it first
     ticket = db.query(Ticket).filter(Ticket.booking_id == booking.id).first()
     if ticket and ticket.status == TicketStatus.confirmed:
         ticket.status = TicketStatus.cancelled
         ticket.cancelled_at = datetime.utcnow()
-        
+
         # Restore available seats
         bus.available_seats += ticket.seats_booked
-    
+
     # Update booking status
     booking.status = BookingStatus.cancelled
     booking.cancelled_time = datetime.utcnow()
     booking.cancellation_reason = cancel_data.reason
-    
+
     db.commit()
-    
+
     return BookingStatusResponse(
         booking_id=booking.id,
         status=booking.status,
@@ -330,7 +331,7 @@ def confirm_ticket(
 ):
     """
     Confirm ticket details after booking acceptance (PASSENGER only)
-    
+
     Creates a confirmed ticket with boarding point and seat count.
     """
     # Get the booking
@@ -340,21 +341,21 @@ def confirm_ticket(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Booking not found"
         )
-    
+
     # Verify passenger owns this booking
     if booking.passenger_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to confirm this booking"
         )
-    
+
     # Check if booking is accepted
     if booking.status != BookingStatus.accepted:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Booking must be accepted before confirming ticket"
         )
-    
+
     # Check if ticket already exists
     existing_ticket = db.query(Ticket).filter(Ticket.booking_id == booking.id).first()
     if existing_ticket:
@@ -362,27 +363,27 @@ def confirm_ticket(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Ticket already confirmed for this booking"
         )
-    
+
     # Get bus and boarding point
     bus = db.query(Bus).filter(Bus.id == booking.bus_id).first()
     boarding_point = db.query(BoardingPoint).filter(
         BoardingPoint.id == ticket_data.boarding_point_id,
         BoardingPoint.bus_id == booking.bus_id
     ).first()
-    
+
     if not boarding_point:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Boarding point not found for this bus"
         )
-    
+
     # Check seat availability
     if bus.available_seats < ticket_data.seats_booked:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Only {bus.available_seats} seats available"
         )
-    
+
     # Create ticket
     new_ticket = Ticket(
         booking_id=booking.id,
@@ -392,14 +393,14 @@ def confirm_ticket(
         total_fare=bus.fare * ticket_data.seats_booked,
         status=TicketStatus.confirmed
     )
-    
+
     # Update available seats
     bus.available_seats -= ticket_data.seats_booked
-    
+
     db.add(new_ticket)
     db.commit()
     db.refresh(new_ticket)
-    
+
     # Prepare response data
     boarding_point_data = {
         "id": boarding_point.id,
@@ -408,14 +409,14 @@ def confirm_ticket(
         "lng": float(boarding_point.lng),
         "sequence_order": boarding_point.sequence_order
     }
-    
+
     bus_details = {
         "bus_number": bus.bus_number,
         "route_from": bus.route_from,
         "route_to": bus.route_to,
         "departure_time": bus.departure_time
     }
-    
+
     return TicketConfirmResponse(
         ticket_id=new_ticket.id,
         status=new_ticket.status,
@@ -437,12 +438,23 @@ def get_my_tickets(
 ):
     """
     Get my tickets (PASSENGER only)
-    
+
     Returns all tickets for the current passenger.
+
+    BUG FIX: Added eager loading of BoardingPoint and Bus relationships
+    to prevent Pydantic validation errors in TicketResponse.
     """
-    # Build query
-    query = db.query(Ticket).join(Booking).filter(Booking.passenger_id == current_user.id)
-    
+    # Build query with proper joins to load all required relationship data
+    query = db.query(Ticket)\
+        .join(Booking, Ticket.booking_id == Booking.id)\
+        .join(BoardingPoint, Ticket.boarding_point_id == BoardingPoint.id)\
+        .join(Bus, Booking.bus_id == Bus.id)\
+        .options(
+            joinedload(Ticket.booking).joinedload(Booking.bus),
+            joinedload(Ticket.boarding_point)
+        )\
+        .filter(Booking.passenger_id == current_user.id)
+
     # Apply status filter
     if status_filter:
         try:
@@ -453,17 +465,47 @@ def get_my_tickets(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid status filter"
             )
-    
-    # Apply pagination
+
+    # Apply pagination and order by newest first
     offset = (page - 1) * limit
-    tickets = query.offset(offset).limit(limit).all()
-    
-    # Convert to response format
+    tickets = query.order_by(Ticket.created_at.desc())\
+        .offset(offset)\
+        .limit(limit)\
+        .all()
+
+    # Manually construct response to ensure all fields are present
     ticket_responses = []
     for ticket in tickets:
-        ticket_data = TicketResponse.model_validate(ticket)
-        ticket_responses.append(ticket_data)
-    
+        # Access relationships that are now loaded
+        boarding_point = ticket.boarding_point
+        bus = ticket.booking.bus
+
+        ticket_responses.append({
+            "id": ticket.id,
+            "booking_id": ticket.booking_id,
+            "boarding_point_id": ticket.boarding_point_id,
+            "status": ticket.status.value,  # Convert enum to string
+            "seats_booked": ticket.seats_booked,
+            "fare_per_seat": float(ticket.fare_per_seat),
+            "total_fare": float(ticket.total_fare),
+            "created_at": ticket.created_at,
+            "completed_at": ticket.completed_at,
+            "cancelled_at": ticket.cancelled_at,
+
+            # Boarding point data from relationship
+            "boarding_point_name": boarding_point.name,
+            "boarding_point_lat": float(boarding_point.lat),
+            "boarding_point_lng": float(boarding_point.lng),
+            "boarding_point_sequence": boarding_point.sequence_order,
+
+            # Bus data from relationship
+            "bus_number": bus.bus_number,
+            "route_from": bus.route_from,
+            "route_to": bus.route_to,
+            "departure_time": bus.departure_time,
+            "bus_type": bus.bus_type.value  # Convert enum to string
+        })
+
     return ticket_responses
 
 
@@ -475,7 +517,7 @@ def cancel_ticket(
 ):
     """
     Cancel a confirmed ticket (PASSENGER only)
-    
+
     Cancels a ticket and restores available seats.
     """
     # Get the ticket
@@ -485,7 +527,7 @@ def cancel_ticket(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Ticket not found"
         )
-    
+
     # Verify passenger owns this ticket
     booking = db.query(Booking).filter(Booking.id == ticket.booking_id).first()
     if not booking or booking.passenger_id != current_user.id:
@@ -493,30 +535,30 @@ def cancel_ticket(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to cancel this ticket"
         )
-    
+
     # Check if ticket can be cancelled
     if ticket.status != TicketStatus.confirmed:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Ticket is already {ticket.status.value}"
         )
-    
+
     # Update ticket status
     ticket.status = TicketStatus.cancelled
     ticket.cancelled_at = datetime.utcnow()
-    
+
     # Restore available seats
     bus = db.query(Bus).filter(Bus.id == booking.bus_id).first()
     if bus:
         bus.available_seats += ticket.seats_booked
-    
+
     # Cancel the associated booking as well
     booking.status = BookingStatus.cancelled
     booking.cancelled_time = datetime.utcnow()
     booking.cancellation_reason = cancel_data.reason
-    
+
     db.commit()
-    
+
     return TicketStatusResponse(
         ticket_id=ticket.id,
         status=ticket.status,
