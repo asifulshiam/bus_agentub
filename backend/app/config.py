@@ -20,17 +20,17 @@ class Settings(BaseSettings):
 
     # CORS (for frontend)
     CORS_ORIGINS: list = [
-        "http://localhost:3000", 
+        "http://localhost:3000",
         "http://localhost:8080",
         "http://localhost:5000",
         "http://127.0.0.1:3000",
-        "http://127.0.0.1:8080", 
+        "http://127.0.0.1:8080",
         "http://127.0.0.1:5000",
-        "*"  # Allow all origins for development
+        "*",  # Allow all origins for development
     ]
 
     # Google Maps API
-    GOOGLE_MAPS_API_KEY: str = ""
+    # GOOGLE_MAPS_API_KEY: str = "" # REMOVED - Using OpenStreetMap
 
     class Config:
         env_file = ".env"

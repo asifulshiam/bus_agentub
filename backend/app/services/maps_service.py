@@ -1,303 +1,297 @@
+"""
+OpenStreetMap Integration Service
+Replaces Google Maps with free OSM APIs
+No API key required, no live traffic data
+"""
+
+import math
+from datetime import datetime
+from typing import Dict, List, Optional
+
 import httpx
-import asyncio
-from typing import Optional, Dict, List, Tuple
-from decimal import Decimal
-import os
-
-from app.config import settings
 
 
-class GoogleMapsService:
-    """Service for Google Maps API integration"""
-    
+class MapsService:
+    """
+    OpenStreetMap-based location service
+    Uses: Nominatim (geocoding), OSRM (routing), Overpass (POI)
+    """
+
     def __init__(self):
-        self.api_key = os.getenv("GOOGLE_MAPS_API_KEY", "")
-        self.base_url = "https://maps.googleapis.com/maps/api"
-    
-    async def calculate_distance_and_duration(
-        self, 
-        origin_lat: float, 
-        origin_lng: float, 
-        destination_lat: float, 
-        destination_lng: float,
-        mode: str = "driving"
-    ) -> Optional[Dict]:
-        """
-        Calculate distance and estimated travel time between two points
-        
-        Args:
-            origin_lat, origin_lng: Starting coordinates
-            destination_lat, destination_lng: Destination coordinates
-            mode: Travel mode (driving, walking, transit)
-        
-        Returns:
-            Dict with distance (meters), duration (seconds), and ETA
-        """
-        if not self.api_key:
-            return None
-        
-        url = f"{self.base_url}/distancematrix/json"
-        params = {
-            "origins": f"{origin_lat},{origin_lng}",
-            "destinations": f"{destination_lat},{destination_lng}",
-            "mode": mode,
-            "key": self.api_key
+        self.nominatim_base = "https://nominatim.openstreetmap.org"
+        self.osrm_base = "https://router.project-osrm.org"
+        self.overpass_base = "https://overpass-api.de/api"
+
+        # Required headers for Nominatim (must identify your app)
+        self.headers = {
+            "User-Agent": "BusAgentUB/1.0 (Student Project; asiful.islam12@northsouth.edu)"
         }
-        
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, params=params)
-                response.raise_for_status()
-                data = response.json()
-                
-                if data["status"] == "OK" and data["rows"]:
-                    element = data["rows"][0]["elements"][0]
-                    if element["status"] == "OK":
-                        return {
-                            "distance": element["distance"]["value"],  # meters
-                            "duration": element["duration"]["value"],  # seconds
-                            "distance_text": element["distance"]["text"],
-                            "duration_text": element["duration"]["text"],
-                            "eta": self._calculate_eta(element["duration"]["value"])
-                        }
-        except Exception as e:
-            print(f"Error calculating distance: {e}")
-            return None
-        
-        return None
-    
-    async def get_route_directions(
-        self, 
-        origin_lat: float, 
-        origin_lng: float, 
-        destination_lat: float, 
-        destination_lng: float,
-        waypoints: Optional[List[Tuple[float, float]]] = None
-    ) -> Optional[Dict]:
-        """
-        Get detailed route directions between two points
-        
-        Args:
-            origin_lat, origin_lng: Starting coordinates
-            destination_lat, destination_lng: Destination coordinates
-            waypoints: Optional list of waypoint coordinates
-        
-        Returns:
-            Dict with route details, polyline, and step-by-step directions
-        """
-        if not self.api_key:
-            return None
-        
-        url = f"{self.base_url}/directions/json"
-        params = {
-            "origin": f"{origin_lat},{origin_lng}",
-            "destination": f"{destination_lat},{destination_lng}",
-            "key": self.api_key
-        }
-        
-        if waypoints:
-            waypoint_str = "|".join([f"{lat},{lng}" for lat, lng in waypoints])
-            params["waypoints"] = waypoint_str
-        
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, params=params)
-                response.raise_for_status()
-                data = response.json()
-                
-                if data["status"] == "OK" and data["routes"]:
-                    route = data["routes"][0]
-                    leg = route["legs"][0]
-                    
-                    return {
-                        "distance": leg["distance"]["value"],
-                        "duration": leg["duration"]["value"],
-                        "distance_text": leg["distance"]["text"],
-                        "duration_text": leg["duration"]["text"],
-                        "polyline": route["overview_polyline"]["points"],
-                        "steps": [
-                            {
-                                "instruction": step["html_instructions"],
-                                "distance": step["distance"]["value"],
-                                "duration": step["duration"]["value"],
-                                "start_location": step["start_location"],
-                                "end_location": step["end_location"]
-                            }
-                            for step in leg["steps"]
-                        ]
-                    }
-        except Exception as e:
-            print(f"Error getting directions: {e}")
-            return None
-        
-        return None
-    
+
     async def geocode_address(self, address: str) -> Optional[Dict]:
         """
-        Convert address to coordinates
-        
-        Args:
-            address: Address string
-        
+        Convert address to coordinates using Nominatim
+        Rate limit: 1 request/second
+
         Returns:
-            Dict with lat, lng, and formatted address
+            {
+                "lat": 23.8103,
+                "lng": 90.4125,
+                "display_name": "Dhaka, Bangladesh",
+                "address": {...}
+            }
         """
-        if not self.api_key:
-            return None
-        
-        url = f"{self.base_url}/geocode/json"
-        params = {
-            "address": address,
-            "key": self.api_key
-        }
-        
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, params=params)
-                response.raise_for_status()
-                data = response.json()
-                
-                if data["status"] == "OK" and data["results"]:
-                    result = data["results"][0]
-                    location = result["geometry"]["location"]
-                    
-                    return {
-                        "lat": location["lat"],
-                        "lng": location["lng"],
-                        "formatted_address": result["formatted_address"],
-                        "place_id": result["place_id"]
-                    }
-        except Exception as e:
-            print(f"Error geocoding address: {e}")
-            return None
-        
-        return None
-    
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            try:
+                response = await client.get(
+                    f"{self.nominatim_base}/search",
+                    params={
+                        "q": address,
+                        "format": "json",
+                        "limit": 1,
+                        "countrycodes": "bd",  # Bangladesh only
+                    },
+                    headers=self.headers,
+                )
+
+                if response.status_code == 200:
+                    results = response.json()
+                    if results:
+                        result = results[0]
+                        return {
+                            "lat": float(result["lat"]),
+                            "lng": float(result["lon"]),
+                            "display_name": result["display_name"],
+                            "address": result.get("address", {}),
+                        }
+                return None
+            except Exception as e:
+                print(f"Geocoding error: {e}")
+                return None
+
     async def reverse_geocode(self, lat: float, lng: float) -> Optional[Dict]:
         """
-        Convert coordinates to address
-        
-        Args:
-            lat, lng: Coordinates
-        
+        Convert coordinates to address using Nominatim
+        Rate limit: 1 request/second
+
         Returns:
-            Dict with formatted address and components
+            {
+                "display_name": "Mohakhali, Dhaka",
+                "address": {
+                    "road": "Mohakhali",
+                    "city": "Dhaka",
+                    "country": "Bangladesh"
+                }
+            }
         """
-        if not self.api_key:
-            return None
-        
-        url = f"{self.base_url}/geocode/json"
-        params = {
-            "latlng": f"{lat},{lng}",
-            "key": self.api_key
-        }
-        
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, params=params)
-                response.raise_for_status()
-                data = response.json()
-                
-                if data["status"] == "OK" and data["results"]:
-                    result = data["results"][0]
-                    
-                    return {
-                        "formatted_address": result["formatted_address"],
-                        "place_id": result["place_id"],
-                        "address_components": result["address_components"]
-                    }
-        except Exception as e:
-            print(f"Error reverse geocoding: {e}")
-            return None
-        
-        return None
-    
-    async def find_nearby_places(
-        self, 
-        lat: float, 
-        lng: float, 
-        radius: int = 1000, 
-        place_type: str = "bus_station"
-    ) -> Optional[List[Dict]]:
-        """
-        Find nearby places (bus stations, restaurants, etc.)
-        
-        Args:
-            lat, lng: Center coordinates
-            radius: Search radius in meters
-            place_type: Type of place to search for
-        
-        Returns:
-            List of nearby places with details
-        """
-        if not self.api_key:
-            return None
-        
-        url = f"{self.base_url}/place/nearbysearch/json"
-        params = {
-            "location": f"{lat},{lng}",
-            "radius": radius,
-            "type": place_type,
-            "key": self.api_key
-        }
-        
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, params=params)
-                response.raise_for_status()
-                data = response.json()
-                
-                if data["status"] == "OK":
-                    return [
-                        {
-                            "name": place["name"],
-                            "place_id": place["place_id"],
-                            "location": place["geometry"]["location"],
-                            "rating": place.get("rating"),
-                            "vicinity": place.get("vicinity"),
-                            "types": place.get("types", [])
-                        }
-                        for place in data["results"]
-                    ]
-        except Exception as e:
-            print(f"Error finding nearby places: {e}")
-            return None
-        
-        return None
-    
-    def _calculate_eta(self, duration_seconds: int) -> str:
-        """Calculate ETA string from duration in seconds"""
-        import datetime
-        eta = datetime.datetime.now() + datetime.timedelta(seconds=duration_seconds)
-        return eta.strftime("%H:%M")
-    
-    def calculate_distance_simple(
-        self, 
-        lat1: float, 
-        lng1: float, 
-        lat2: float, 
-        lng2: float
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            try:
+                response = await client.get(
+                    f"{self.nominatim_base}/reverse",
+                    params={"lat": lat, "lon": lng, "format": "json"},
+                    headers=self.headers,
+                )
+
+                if response.status_code == 200:
+                    return response.json()
+                return None
+            except Exception as e:
+                print(f"Reverse geocoding error: {e}")
+                return None
+
+    def calculate_distance(
+        self, lat1: float, lng1: float, lat2: float, lng2: float
     ) -> float:
         """
-        Calculate simple distance between two points using Haversine formula
+        Calculate distance between two points using Haversine formula
         Returns distance in kilometers
         """
-        import math
-        
-        # Convert to radians
-        lat1, lng1, lat2, lng2 = map(math.radians, [lat1, lng1, lat2, lng2])
-        
-        # Haversine formula
-        dlat = lat2 - lat1
-        dlng = lng2 - lng1
-        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng/2)**2
-        c = 2 * math.asin(math.sqrt(a))
-        
-        # Radius of earth in kilometers
-        r = 6371
-        
-        return c * r
+        R = 6371  # Earth's radius in km
+
+        lat1_rad = math.radians(lat1)
+        lat2_rad = math.radians(lat2)
+        delta_lat = math.radians(lat2 - lat1)
+        delta_lng = math.radians(lng2 - lng1)
+
+        a = (
+            math.sin(delta_lat / 2) ** 2
+            + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lng / 2) ** 2
+        )
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+        return R * c
+
+    async def get_route(
+        self, start_lat: float, start_lng: float, end_lat: float, end_lng: float
+    ) -> Optional[Dict]:
+        """
+        Get route between two points using OSRM
+
+        Returns:
+            {
+                "distance": 15.2,  # km
+                "duration": 1800,  # seconds (30 min)
+                "geometry": [...],  # route coordinates
+                "steps": [...]  # turn-by-turn directions
+            }
+        """
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            try:
+                # OSRM route API
+                coords = f"{start_lng},{start_lat};{end_lng},{end_lat}"
+                response = await client.get(
+                    f"{self.osrm_base}/route/v1/driving/{coords}",
+                    params={
+                        "overview": "full",
+                        "steps": "true",
+                        "geometries": "geojson",
+                    },
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("code") == "Ok" and data.get("routes"):
+                        route = data["routes"][0]
+                        return {
+                            "distance": route["distance"] / 1000,  # meters to km
+                            "duration": route["duration"],  # seconds
+                            "geometry": route["geometry"]["coordinates"],
+                            "steps": route["legs"][0].get("steps", []),
+                        }
+                return None
+            except Exception as e:
+                print(f"Route calculation error: {e}")
+                return None
+
+    async def calculate_eta(
+        self, bus_lat: float, bus_lng: float, stop_lat: float, stop_lng: float
+    ) -> Dict:
+        """
+        Calculate ETA from bus current position to boarding point
+        Uses OSRM for accurate routing
+        Falls back to straight-line distance if OSRM fails
+
+        Returns:
+            {
+                "distance_km": 5.2,
+                "eta_minutes": 15,
+                "eta_time": "2025-11-16T10:30:00"
+            }
+        """
+        # Try OSRM first for accurate route
+        route = await self.get_route(bus_lat, bus_lng, stop_lat, stop_lng)
+
+        if route:
+            distance_km = route["distance"]
+            duration_seconds = route["duration"]
+            eta_minutes = int(duration_seconds / 60)
+        else:
+            # Fallback: straight-line distance
+            distance_km = self.calculate_distance(bus_lat, bus_lng, stop_lat, stop_lng)
+            # Assume average speed 40 km/h in city
+            eta_minutes = int((distance_km / 40) * 60)
+
+        # Calculate arrival time
+        from datetime import timedelta
+
+        eta_time = datetime.now() + timedelta(minutes=eta_minutes)
+
+        return {
+            "distance_km": round(distance_km, 2),
+            "eta_minutes": eta_minutes,
+            "eta_time": eta_time.isoformat(),
+        }
+
+    async def get_nearby_places(
+        self, lat: float, lng: float, radius: int = 500, place_type: str = "restaurant"
+    ) -> List[Dict]:
+        """
+        Find nearby places using Overpass API
+
+        Args:
+            lat, lng: Center coordinates
+            radius: Search radius in meters (default 500m)
+            place_type: Type of place (restaurant, hospital, atm, etc.)
+
+        Returns:
+            [
+                {
+                    "name": "Restaurant Name",
+                    "lat": 23.8103,
+                    "lng": 90.4125,
+                    "type": "restaurant",
+                    "distance_m": 250
+                }
+            ]
+        """
+        # Map common types to OSM tags
+        type_mapping = {
+            "restaurant": "amenity=restaurant",
+            "hospital": "amenity=hospital",
+            "atm": "amenity=atm",
+            "pharmacy": "amenity=pharmacy",
+            "fuel": "amenity=fuel",
+            "hotel": "tourism=hotel",
+        }
+
+        osm_tag = type_mapping.get(place_type, f"amenity={place_type}")
+
+        # Overpass QL query
+        query = f"""
+        [out:json];
+        (
+          node[{osm_tag}](around:{radius},{lat},{lng});
+          way[{osm_tag}](around:{radius},{lat},{lng});
+        );
+        out center 20;
+        """
+
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            try:
+                response = await client.get(
+                    f"{self.overpass_base}/interpreter", params={"data": query}
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    places = []
+
+                    for element in data.get("elements", [])[:20]:  # Limit to 20
+                        # Get coordinates
+                        if element["type"] == "node":
+                            elem_lat = element["lat"]
+                            elem_lng = element["lon"]
+                        else:  # way
+                            elem_lat = element.get("center", {}).get("lat")
+                            elem_lng = element.get("center", {}).get("lon")
+
+                        if not elem_lat or not elem_lng:
+                            continue
+
+                        # Calculate distance
+                        distance = (
+                            self.calculate_distance(lat, lng, elem_lat, elem_lng) * 1000
+                        )  # km to m
+
+                        places.append(
+                            {
+                                "name": element.get("tags", {}).get("name", "Unnamed"),
+                                "lat": elem_lat,
+                                "lng": elem_lng,
+                                "type": place_type,
+                                "distance_m": int(distance),
+                                "tags": element.get("tags", {}),
+                            }
+                        )
+
+                    # Sort by distance
+                    places.sort(key=lambda x: x["distance_m"])
+                    return places
+
+                return []
+            except Exception as e:
+                print(f"Nearby places error: {e}")
+                return []
 
 
-# Global instance
-maps_service = GoogleMapsService()
+# Singleton instance
+maps_service = MapsService()
