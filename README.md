@@ -170,3 +170,27 @@
 - Manage buses & supervisors.
     
 - Ticket sales & reports.
+
+---
+
+## 🚀 Production Deployment
+
+**Backend API:** https://web-production-9625a.up.railway.app
+
+**API Documentation:** https://web-production-9625a.up.railway.app/docs
+
+**Status:** ✅ Live and operational
+
+**Database:** PostgreSQL on Railway
+
+**Last Deployed:** November 23, 2025
+
+### For Frontend Developers
+See [FRONTEND_INTEGRATION.md](FRONTEND_INTEGRATION.md) for complete API integration guide.
+
+### Technology Stack
+- **Backend:** FastAPI + SQLAlchemy + PostgreSQL
+- **Deployment:** Railway (with auto-deploy from GitHub)
+- **Maps:** OpenStreetMap (Nominatim, OSRM, Overpass API)
+- **Real-time:** WebSockets for live location tracking
+- **Authentication:** JWT tokens (7-day expiry)
