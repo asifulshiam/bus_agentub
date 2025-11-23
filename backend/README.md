@@ -213,19 +213,3 @@ alembic upgrade head
 | `DEBUG` | Debug mode | `True` |
 | `CORS_ORIGINS` | Allowed CORS origins | `["http://localhost:3000"]` |
 | `GOOGLE_MAPS_API_KEY` | Google Maps API key | `""` |
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🆘 Support
-
-For support, please contact the development team or create an issue in the repository.
