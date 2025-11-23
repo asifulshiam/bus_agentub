@@ -1,3 +1,5 @@
+> **📝 Note:** This document is maintained for reference. For the latest production API information and frontend integration, see [FRONTEND_INTEGRATION.md](../FRONTEND_INTEGRATION.md) in the project root.
+
 &nbsp;
 
 # 📘 Database Schema – Bus Ticketing System

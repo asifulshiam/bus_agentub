@@ -1,3 +1,5 @@
+> **📝 Note:** This document is maintained for reference. For the latest production API information and frontend integration, see [FRONTEND_INTEGRATION.md](../FRONTEND_INTEGRATION.md) in the project root.
+
 ## **API Contract Table**
 
 | Module | Endpoint | Method | Auth Required | Purpose | Query/Body Params | Response |
