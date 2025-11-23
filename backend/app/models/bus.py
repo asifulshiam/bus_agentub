@@ -30,7 +30,10 @@ class Bus(Base):
     route_from = Column(String(100), nullable=False)
     route_to = Column(String(100), nullable=False)
     departure_time = Column(TIMESTAMP, nullable=False)
-    bus_type = Column(Enum(BusType), nullable=False)
+    # FIX: Tell SQLAlchemy to use enum VALUES not NAMES
+    bus_type = Column(
+        Enum(BusType, values_callable=lambda x: [e.value for e in x]), nullable=False
+    )
     fare = Column(DECIMAL(10, 2), nullable=False)
     seat_capacity = Column(Integer, nullable=False)
     available_seats = Column(Integer, nullable=False)
