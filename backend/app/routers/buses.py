@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.database import get_db
 from app.database import get_db
 from app.dependencies import get_current_owner, get_current_user
 from app.models import User
