@@ -29,51 +29,54 @@ def create_sample_data():
     db = SessionLocal()
     
     try:
-        # Create sample users
-        sample_users = [
-            User(
-                name="Bus Owner",
-                phone="01700000001",
-                password_hash=hash_password("password123"),
-                nid="1234567890123",
-                role=UserRole.owner,
-                is_active=True
-            ),
-            User(
-                name="Bus Supervisor",
-                phone="01700000002",
-                password_hash=hash_password("password123"),
-                nid="1234567890124",
-                role=UserRole.supervisor,
-                is_active=True
-            ),
-            User(
-                name="John Passenger",
-                phone="01700000003",
-                password_hash=hash_password("password123"),
-                nid="1234567890125",
-                role=UserRole.passenger,
-                is_active=True
-            ),
-            User(
-                name="Jane Passenger",
-                phone="01700000004",
-                password_hash=hash_password("password123"),
-                nid="1234567890126",
-                role=UserRole.passenger,
-                is_active=True
-            )
-        ]
+        # ✅ Create owner first (need ID for supervisor)
+        owner = User(
+            name="Bus Owner",
+            phone="01700000001",
+            password_hash=hash_password("password123"),
+            nid="1234567890123",
+            role=UserRole.OWNER,
+            is_active=True
+        )
+        db.add(owner)
+        db.commit()
+        db.refresh(owner)
+        print(f"Owner created with ID: {owner.id}")
         
-        for user_obj in sample_users:
-            db.add(user_obj)
+        # ✅ Create supervisor linked to owner
+        supervisor = User(
+            name="Bus Supervisor",
+            phone="01700000002",
+            password_hash=hash_password("password123"),
+            nid="1234567890124",
+            role=UserRole.SUPERVISOR,
+            owner_id=owner.id,  # ✅ Link supervisor to owner
+            is_active=True
+        )
+        db.add(supervisor)
         
+        # Create passengers (no owner_id needed)
+        passenger1 = User(
+            name="John Passenger",
+            phone="01700000003",
+            password_hash=hash_password("password123"),
+            nid="1234567890125",
+            role=UserRole.PASSENGER,
+            is_active=True
+        )
+        passenger2 = User(
+            name="Jane Passenger",
+            phone="01700000004",
+            password_hash=hash_password("password123"),
+            nid="1234567890126",
+            role=UserRole.PASSENGER,
+            is_active=True
+        )
+        
+        db.add(passenger1)
+        db.add(passenger2)
         db.commit()
         print("Sample users created")
-        
-        # Get created users
-        owner = db.query(User).filter(User.role == UserRole.owner).first()
-        supervisor = db.query(User).filter(User.role == UserRole.supervisor).first()
         
         # Create sample buses
         sample_buses = [
@@ -185,16 +188,16 @@ def create_sample_data():
         db.commit()
         print("Sample boarding points created")
         
-        print("\nSample data created successfully!")
-        print("\nSample login credentials:")
+        print("\n✅ Sample data created successfully!")
+        print("\n📝 Sample login credentials:")
         print("Owner: 01700000001 / password123")
-        print("Supervisor: 01700000002 / password123")
+        print("Supervisor: 01700000002 / password123 (linked to owner)")
         print("Passenger: 01700000003 / password123")
         print("Passenger: 01700000004 / password123")
         
     except Exception as e:
         db.rollback()
-        print(f"Error creating sample data: {e}")
+        print(f"❌ Error creating sample data: {e}")
         raise
     finally:
         db.close()
