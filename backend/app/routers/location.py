@@ -1,9 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
-
 from app.database import get_db
 from app.dependencies import get_current_supervisor, get_current_user
 from app.models.boarding_point import BoardingPoint
@@ -12,6 +9,8 @@ from app.models.user import User
 from app.routers.websocket import send_bus_location_update
 from app.schemas.location import GeocodeRequest
 from app.services.maps_service import maps_service
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/location", tags=["Location Services"])
 
@@ -210,7 +209,7 @@ async def get_eta_to_boarding_point(
             "message": "Bus location not available",
         }
 
-    # Calculate ETA using Google Maps API
+    # Calculate ETA using OpenStreetMap
     try:
         eta_data = await maps_service.calculate_eta(
             float(bus.current_lat),
@@ -290,7 +289,7 @@ async def get_eta_to_boarding_point(
 @router.get("/boarding-points/{boarding_point_id}/nearby")
 async def get_nearby_places(
     boarding_point_id: int,
-    place_type: str = Query("bus_station", description="Type of places to find"),
+    place_type: str = Query("restaurant", description="Type of places to find"),
     radius: int = Query(500, ge=100, le=5000, description="Search radius in meters"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -298,7 +297,7 @@ async def get_nearby_places(
     """
     Find nearby places around a boarding point
 
-    Uses Google Places API to find nearby amenities.
+    Uses Overpass API to find nearby amenities.
     """
     # Get the boarding point
     boarding_point = (
@@ -340,12 +339,11 @@ async def get_nearby_places(
 async def geocode_address(
     request: GeocodeRequest,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
 ):
     """
-    Convert address to coordinates
+    Convert address to coordinates using Nominatim
 
-    Useful for finding coordinates when adding boarding points.
+    Example: "Mohakhali, Dhaka" → {lat: 23.7799, lng: 90.4083}
     """
     try:
         result = await maps_service.geocode_address(request.address)
@@ -353,23 +351,24 @@ async def geocode_address(
         if result:
             return {
                 "address": request.address,
-                "coordinates": {"lat": result["lat"], "lng": result["lng"]},
-                "formatted_address": result.get("display_name", ""),
-                "place_id": result.get("place_id", "N/A"),
+                "lat": result["lat"],
+                "lng": result["lng"],
+                "display_name": result.get("display_name", ""),
+                "address_details": result.get("address", {}),
             }
         else:
-            return {
-                "address": request.address,
-                "error": "Unable to geocode address",
-                "message": "Address not found or service unavailable",
-            }
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Could not find location for '{request.address}'",
+            )
 
+    except HTTPException:
+        raise
     except Exception as e:
-        return {
-            "address": request.address,
-            "error": str(e),
-            "message": "Geocoding failed",
-        }
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Geocoding failed: {str(e)}",
+        )
 
 
 @router.get("/route/{bus_id}")
@@ -448,15 +447,11 @@ async def get_bus_route(
             origin = boarding_points_data[0]
             destination = boarding_points_data[-1]
 
-            # Include intermediate waypoints
-            waypoints = [(bp["lat"], bp["lng"]) for bp in boarding_points_data[1:-1]]
-
             route_data = await maps_service.get_route(
                 origin["lat"],
                 origin["lng"],
                 destination["lat"],
                 destination["lng"],
-                waypoints if waypoints else None,
             )
         except Exception as e:
             print(f"Error getting route directions: {e}")
@@ -466,7 +461,9 @@ async def get_bus_route(
         "bus_number": bus.bus_number,
         "route_from": bus.route_from,
         "route_to": bus.route_to,
-        "departure_time": bus.departure_time,
+        "departure_time": bus.departure_time.isoformat()
+        if bus.departure_time
+        else None,
         "boarding_points": boarding_points_data,
         "route_directions": route_data,
         "current_location": {

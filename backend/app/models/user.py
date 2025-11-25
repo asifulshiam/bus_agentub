@@ -1,6 +1,7 @@
 import enum
 
-from sqlalchemy import TIMESTAMP, Boolean, Column, Enum, Integer, String
+from sqlalchemy import TIMESTAMP, Boolean, Column, Enum, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from ..database import Base
@@ -25,4 +26,22 @@ class User(Base):
     created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
     updated_at = Column(
         TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    # ✅ NEW: Link supervisor to owner who hired them
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    # ✅ NEW: Relationships for owner-supervisor link
+    hired_supervisors = relationship(
+        "User",
+        foreign_keys="User.owner_id",
+        back_populates="hired_by",
+        cascade="all, delete",
+    )
+
+    hired_by = relationship(
+        "User",
+        foreign_keys=[owner_id],
+        remote_side=[id],
+        back_populates="hired_supervisors",
     )
