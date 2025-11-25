@@ -11,8 +11,6 @@ from app.models.bus import Bus, BusType
 from app.models.user import User, UserRole
 from app.schemas.boarding_point import BoardingPointCreate, BoardingPointResponse
 from app.schemas.bus import BusCreate, BusDetailedResponse, BusPublicResponse, BusUpdate
-from app.schemas.boarding_point import BoardingPointCreate, BoardingPointResponse
-from app.schemas.bus import BusCreate, BusDetailedResponse, BusPublicResponse, BusUpdate
 
 router = APIRouter(prefix="/buses", tags=["Bus Management"])
 
