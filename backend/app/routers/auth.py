@@ -30,10 +30,20 @@ def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
     - **phone**: Phone number (unique, 10-15 digits)
     - **password**: Password (min 8 characters)
     - **nid**: National ID (10-20 characters, stored but never exposed)
-    - **role**: User role (passenger/supervisor/owner, default: passenger)
+    - **role**: User role (passenger/owner only - supervisors must be registered by owners)
 
     Returns JWT token and user data
+    
+    Note: Supervisors cannot self-register. They must be registered by a bus owner
+    via the /owner/register-supervisor endpoint.
     """
+    # ✅ SECURITY: Block supervisor self-registration
+    if user_data.role.value == "supervisor":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Supervisors cannot self-register. Please contact a bus owner to create your account.",
+        )
+
     # Check if phone already exists
     existing_user = db.query(User).filter(User.phone == user_data.phone).first()
     if existing_user:
@@ -42,7 +52,7 @@ def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
             detail="Phone number already registered",
         )
 
-    # Create new user
+    # Create new user (passengers and owners only)
     new_user = User(
         name=user_data.name,
         phone=user_data.phone,
@@ -50,6 +60,7 @@ def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
         nid=user_data.nid,
         role=user_data.role,
         is_active=True,
+        # owner_id stays NULL for passengers and owners
     )
 
     db.add(new_user)
