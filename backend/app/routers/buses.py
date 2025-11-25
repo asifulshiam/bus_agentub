@@ -5,13 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.database import get_db
 from app.dependencies import get_current_owner, get_current_user
-from app.models import User
 from app.models.boarding_point import BoardingPoint
 from app.models.bus import Bus, BusType
-from app.models.user import User, UserRole 
 from app.models.user import User, UserRole
+from app.schemas.boarding_point import BoardingPointCreate, BoardingPointResponse
+from app.schemas.bus import BusCreate, BusDetailedResponse, BusPublicResponse, BusUpdate
 from app.schemas.boarding_point import BoardingPointCreate, BoardingPointResponse
 from app.schemas.bus import BusCreate, BusDetailedResponse, BusPublicResponse, BusUpdate
 
