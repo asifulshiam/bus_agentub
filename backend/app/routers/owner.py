@@ -13,7 +13,7 @@ from app.models.bus import Bus
 from app.models.ticket import Ticket, TicketStatus
 from app.models.user import User, UserRole
 from app.schemas.bus import BusOwnerResponse
-from app.schemas.user import UserCreate
+from app.schemas.user import UserRegister
 from app.utils import hash_password
 
 router = APIRouter(prefix="/owner", tags=["Owner Dashboard"])
@@ -292,7 +292,7 @@ def get_owner_supervisors(
 
 @router.post("/register-supervisor")
 def register_supervisor(
-    supervisor_data: UserCreate,
+    supervisor_data: UserRegister,
     current_user: User = Depends(get_current_owner),
     db: Session = Depends(get_db),
 ):
