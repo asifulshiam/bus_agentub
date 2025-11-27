@@ -14,7 +14,6 @@ from app.models.ticket import Ticket, TicketStatus
 from app.models.user import User
 from app.schemas.user import UserRegister, UserRole
 from app.schemas.bus import BusOwnerResponse
-from app.schemas.user import UserRegister
 from app.utils import hash_password
 
 router = APIRouter(prefix="/owner", tags=["Owner Dashboard"])
