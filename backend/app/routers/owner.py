@@ -11,7 +11,8 @@ from app.models.boarding_point import BoardingPoint
 from app.models.booking import Booking, BookingStatus
 from app.models.bus import Bus
 from app.models.ticket import Ticket, TicketStatus
-from app.models.user import User, UserRole
+from app.models.user import User
+from app.schemas.user import UserRegister, UserRole
 from app.schemas.bus import BusOwnerResponse
 from app.schemas.user import UserRegister
 from app.utils import hash_password
