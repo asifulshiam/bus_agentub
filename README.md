@@ -142,8 +142,8 @@ View revenue reports → Track all operations
 **Scenario:** Sarah wants to travel from Dhaka to Chittagong
 
 1. **Sarah searches** for buses:
-   - Sees: Route, time, type (AC/Non-AC), price, available seats
-   - Doesn't see: Supervisor details, boarding points (privacy!)
+   - Sees: Route, time, type (AC/Non-AC), price
+   - Doesn't see: Supervisor details, boarding points, available seats (privacy!)
 
 2. **Sarah requests booking** for Bus #123:
    - System creates pending booking

@@ -377,6 +377,7 @@ Features:
 
 ### Privacy & Security
 - ✅ Passenger details hidden until booking accepted
+- ✅ Seat counts hidden until booking accepted
 - ✅ NID never exposed in API responses
 - ✅ JWT tokens expire after 7 days
 - ✅ Role-based access control enforced

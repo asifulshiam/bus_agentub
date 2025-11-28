@@ -48,7 +48,6 @@ How database tables map to API JSON responses.
     "departure_time": "2025-12-10T08:00:00",
     "bus_type": "AC",
     "fare": "800.00",
-    "available_seats": 36,
     "is_active": true
   }
 ]
@@ -63,8 +62,9 @@ How database tables map to API JSON responses.
 | departure_time | buses | departure_time | ISO 8601 timestamp |
 | bus_type | buses | bus_type | Enum: AC/Non-AC/AC Sleeper |
 | fare | buses | fare | Decimal as string |
-| available_seats | buses | available_seats | Auto-updated |
 | is_active | buses | is_active | Soft delete flag |
+
+**Note:** `available_seats` field is excluded from public search results for privacy. Only visible to owners/supervisors in detailed views.
 
 ### GET /buses/{id} (full details)
 

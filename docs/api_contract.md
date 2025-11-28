@@ -17,7 +17,7 @@
 
 | Endpoint | Method | Auth | Purpose | Request | Response | Validation |
 |----------|--------|------|---------|---------|----------|------------|
-| `/buses` | GET | No | Search buses | Query: `?route_from=&route_to=&date=` | `[{id, bus_number, route_from, route_to, departure_time, bus_type, fare, available_seats, is_active}]` | Public endpoint |
+| `/buses` | GET | No | Search buses | Query: `?route_from=&route_to=&date=` | `[{id, bus_number, route_from, route_to, departure_time, bus_type, fare, is_active}]` | Public endpoint |
 | `/buses` | POST | Owner | Create bus | `{bus_number, route_from, route_to, departure_time, bus_type, fare, seat_capacity, supervisor_id}` | `{id, bus_number, ..., supervisor: {id, name, phone}}` | bus_number: max 20 chars<br>bus_type: "AC", "Non-AC", "AC Sleeper"<br>supervisor must belong to owner |
 | `/buses/{id}` | GET | Auth | Get details | - | `{id, bus_number, route_from, route_to, ..., supervisor: {...}, boarding_points: [...], current_lat, current_lng}` | Full bus details |
 | `/buses/{id}` | PUT | Owner/Supervisor | Update bus | `{fare?, bus_type?, ...}` | Updated bus object | - |
