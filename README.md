@@ -207,22 +207,6 @@ bus_agentub/
 
 ---
 
-## For Developers
-
-**API Documentation:** See `docs/api_contract.md` for complete endpoint reference
-
-**Quick Test:**
-```bash
-# Health check
-curl https://web-production-9625a.up.railway.app/
-
-# Search buses
-curl https://web-production-9625a.up.railway.app/buses?route_from=Dhaka&route_to=Chittagong
-
-# Interactive API testing
-Visit: https://web-production-9625a.up.railway.app/docs
-```
-
 **Tech Stack Details:**
 - **Language:** Python 3.12
 - **Framework:** FastAPI 0.104.1
@@ -233,18 +217,3 @@ Visit: https://web-production-9625a.up.railway.app/docs
 - **Validation:** Pydantic v2
 - **WebSocket:** Native FastAPI WebSockets
 - **Maps:** Nominatim (geocoding), OSRM (routing), Overpass (places)
-
----
-
-## Deployment
-
-**Platform:** Railway  
-**Auto-deploy:** Enabled from GitHub main branch  
-**Database:** Managed PostgreSQL on Railway  
-**Environment:** Production-ready with monitoring
-
-**Deploy Process:**
-```bash
-git push origin main
-# Railway automatically deploys in ~2 minutes
-```
