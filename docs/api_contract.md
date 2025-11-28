@@ -1,10 +1,5 @@
 # API Contract - Bus AgentUB
 
-Complete API reference for frontend integration.
-
-**Production API:** `https://web-production-9625a.up.railway.app`  
-**Interactive Docs:** `https://web-production-9625a.up.railway.app/docs`
-
 ---
 
 ## Authentication & User Management
@@ -180,7 +175,3 @@ curl -X POST "https://web-production-9625a.up.railway.app/booking/accept" \
 ```
 
 ---
-
-**Last Updated:** November 28, 2025  
-**API Version:** 1.0  
-**Database:** PostgreSQL 16 on Railway
