@@ -98,11 +98,11 @@
 - **Dates:** ISO 8601 format (`2025-12-25T10:00:00`)
 
 ### Privacy & Security
-- ✅ Supervisors cannot self-register (must be created by owner)
-- ✅ Each supervisor belongs to one owner
-- ✅ Passenger details hidden until booking accepted
-- ✅ NID never exposed in API responses
-- ✅ Role-based access control enforced
+-  Supervisors cannot self-register (must be created by owner)
+-  Each supervisor belongs to one owner
+-  Passenger details hidden until booking accepted
+-  NID never exposed in API responses
+-  Role-based access control enforced
 
 ### Error Responses
 
