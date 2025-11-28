@@ -381,13 +381,3 @@ Common HTTP codes:
 - Bus number longer than 20 characters
 
 ---
-
-## 📞 Support
-
-For API issues or questions:
-1. Check the interactive docs at `/docs`
-2. Review this integration guide
-3. Contact backend team
-
-**Backend Status:** ✅ Production ready and tested
-**Last Updated:** November 28, 2025
