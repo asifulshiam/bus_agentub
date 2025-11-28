@@ -7,7 +7,6 @@ FastAPI-based backend for the Bus AgentUB booking system with real-time tracking
 ### Prerequisites
 - Python 3.8+
 - SQLite (development) or PostgreSQL (production)
-- Google Maps API key (optional)
 
 ### Setup
 
@@ -46,7 +45,7 @@ API available at `http://localhost:8000`
 - JWT-based authentication with role-based access
 - Real-time WebSocket updates for bookings and bus locations
 - Complete booking workflow (request → confirmation → ticket)
-- Google Maps integration for routing and ETAs
+- Open Street Maps integration for routing and ETAs
 - Owner dashboard with analytics
 - Supervisor tools for booking management
 
