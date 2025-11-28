@@ -34,18 +34,19 @@
 - `GET /booking/requests` - View pending requests (Supervisor)
 - `POST /booking/accept` - Accept booking (Supervisor)
 - `POST /booking/reject` - Reject booking (Supervisor)
-- `POST /booking/cancel` - Cancel booking
-- `POST /booking/ticket/confirm` - Confirm ticket details
-- `GET /booking/tickets/mine` - Get my tickets
-- `POST /booking/ticket/cancel` - Cancel ticket
+- `POST /booking/cancel` - Cancel booking (Passenger)
+- `POST /booking/ticket/confirm` - Confirm ticket details (Passenger)
+- `GET /booking/tickets/mine` - Get my tickets (Passenger)
+- `POST /booking/ticket/cancel` - Cancel ticket (Passenger)
 
 ### Owner Dashboard (`/owner`)
 - `GET /owner/dashboard` - Dashboard overview
+- `POST /owner/register-supervisor` - Register new supervisor
+- `GET /owner/supervisors` - List supervisors
 - `GET /owner/buses` - List all buses
+- `GET /owner/bookings` - Owner bookings view
 - `GET /owner/tickets` - Ticket sales report
 - `GET /owner/revenue-summary` - Revenue summary
-- `GET /owner/supervisors` - List supervisors
-- `GET /owner/bookings` - Owner bookings view
 
 ### Location Services (`/location`)
 - `POST /location/bus/{id}/update` - Update bus GPS location
@@ -122,16 +123,17 @@ const response = await fetch('https://web-production-9625a.up.railway.app/buses/
 - Accept/reject bookings
 - Update bus details
 - Update bus location
+- Cannot self-register (must be registered by owner)
 
 ### Owner
 - Manage buses (CRUD)
+- Register and manage supervisors
 - View dashboard and reports
-- Manage supervisors
 - Revenue analytics
 
 ---
 
-## 🗺️ Location Features
+## 🗺 Location Features
 
 ### Maps Integration
 **Backend uses:** OpenStreetMap (Nominatim, OSRM, Overpass API)
@@ -143,7 +145,7 @@ const response = await fetch('https://web-production-9625a.up.railway.app/buses/
 - ✅ Nearby places (restaurants, landmarks)
 - ✅ Turn-by-turn directions
 
-**Frontend can use:** 
+**Frontend can use:**
 - OpenStreetMap (Leaflet)
 - Google Maps
 - Mapbox
@@ -206,32 +208,75 @@ curl -X POST "https://web-production-9625a.up.railway.app/auth/register" \
   }'
 ```
 
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "phone": "+8801712345678",
+    "role": "passenger"
+  }
+}
+```
+
 ### Search Buses
 ```bash
 curl "https://web-production-9625a.up.railway.app/buses?route_from=Dhaka&route_to=Chittagong"
 ```
 
-### Request Booking
+### Create Booking Request
 ```bash
 curl -X POST "https://web-production-9625a.up.railway.app/booking/request" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "bus_id": 1,
-    "boarding_point_id": 1,
-    "seats_requested": 2
+    "bus_id": 1
   }'
+```
+
+**Response:**
+```json
+{
+  "booking_id": 1,
+  "status": "pending",
+  "message": "Booking request sent successfully"
+}
+```
+
+### Accept Booking (Supervisor)
+```bash
+curl -X POST "https://web-production-9625a.up.railway.app/booking/accept" \
+  -H "Authorization: Bearer SUPERVISOR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "booking_id": 1
+  }'
+```
+
+### Confirm Ticket (Passenger)
+```bash
+curl -X POST "https://web-production-9625a.up.railway.app/booking/ticket/confirm" \
+  -H "Authorization: Bearer PASSENGER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "booking_id": 1,
+    "seat_numbers": "A1, A2",
+    "boarding_point_id": 1
+  }'
+```
+
+### Update Bus Location (Supervisor)
+```bash
+curl -X POST "https://web-production-9625a.up.railway.app/location/bus/1/update?lat=23.8103&lng=90.4125" \
+  -H "Authorization: Bearer SUPERVISOR_TOKEN"
 ```
 
 ---
 
 ## 🧪 Testing
-
-### Test Account (Production)
-- **Phone:** `+8801999999999`
-- **Password:** `testpass123`
-- **Role:** Owner
-- **Note:** Use for testing only, create your own accounts for real data
 
 ### Interactive API Testing
 Visit: `https://web-production-9625a.up.railway.app/docs`
@@ -244,25 +289,59 @@ Features:
 
 ---
 
-## ⚠️ Important Notes
+## ⚠ Important Notes
 
 ### Privacy & Security
 - ✅ Passenger details hidden until booking accepted
 - ✅ NID never exposed in API responses
 - ✅ JWT tokens expire after 7 days
 - ✅ Role-based access control enforced
+- ✅ Supervisors must be registered by owners (cannot self-register)
+- ✅ Each supervisor belongs to exactly one owner
 
 ### Data Validation
-- Phone: Must be international format (`+880...`)
-- NID: 13 digits (validated on backend)
-- Seats: Cannot exceed bus capacity
+- **Phone:** Must be international format (`+880...`), 14 characters total
+- **Password:** Minimum 8 characters
+- **NID:** Exactly 13 digits
+- **Bus Number:** Maximum 20 characters
+- **Seats:** Cannot exceed bus capacity
 - All required fields validated
+
+### Booking Workflow
+1. Passenger creates booking request (`POST /booking/request`)
+2. Supervisor views pending requests (`GET /booking/requests`)
+3. Supervisor accepts booking (`POST /booking/accept` with `booking_id` in body)
+4. Passenger confirms ticket details (`POST /booking/ticket/confirm`)
+5. Passenger can view confirmed tickets (`GET /booking/tickets/mine`)
+
+### Parameter Formats
+
+**Booking Operations (accept/reject/cancel):**
+- Send `booking_id` in request body, NOT in URL path
+- Example: `POST /booking/accept` with body `{"booking_id": 1}`
+
+**Location Update:**
+- Send coordinates as query parameters
+- Example: `POST /location/bus/1/update?lat=23.81&lng=90.41`
 
 ### Error Responses
 Standard format:
 ```json
 {
   "detail": "Error message here"
+}
+```
+
+Validation errors format:
+```json
+{
+  "detail": [
+    {
+      "type": "string_too_short",
+      "loc": ["body", "password"],
+      "msg": "String should have at least 8 characters"
+    }
+  ]
 }
 ```
 
@@ -294,6 +373,21 @@ Common HTTP codes:
 - Include token in URL query parameter
 - Check if booking is accepted (for passengers)
 
+### Common Mistakes
+- Using `/bookings/*` instead of `/booking/*` (singular!)
+- Sending `booking_id` in URL instead of request body for accept/reject/cancel
+- Sending location coordinates in body instead of query parameters
+- Password less than 8 characters
+- Bus number longer than 20 characters
+
 ---
 
-**Backend Status:** ✅ Production ready
+## 📞 Support
+
+For API issues or questions:
+1. Check the interactive docs at `/docs`
+2. Review this integration guide
+3. Contact backend team
+
+**Backend Status:** ✅ Production ready and tested
+**Last Updated:** November 28, 2025
