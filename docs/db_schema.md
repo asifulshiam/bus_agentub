@@ -237,8 +237,6 @@ Passengers receive via WebSocket /ws/location/{bus_id}
 - Bus number: Maximum 20 characters
 - Supervisor ownership: supervisor.owner_id must equal bus.owner_id
 
----
-
-**Last Updated:** November 28, 2025  
+---  
 **Database:** PostgreSQL 16  
 **Schema Version:** 1.0
