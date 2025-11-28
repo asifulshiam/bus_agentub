@@ -15,7 +15,6 @@ from app.schemas.bus import BusCreate, BusDetailedResponse, BusPublicResponse, B
 
 router = APIRouter(prefix="/buses", tags=["Bus Management"])
 
-
 @router.get("", response_model=List[BusPublicResponse])
 def search_buses(
     route_from: Optional[str] = Query(None, description="Departure city"),

@@ -122,7 +122,7 @@ class BusPublicResponse(BaseModel):
     departure_time: datetime
     bus_type: BusType
     fare: Decimal
-    available_seats: int
+   
     is_active: bool
 
     class Config:
