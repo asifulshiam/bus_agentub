@@ -1,217 +1,341 @@
-> **📝 Note:** This document is maintained for reference. For the latest production API information and frontend integration, see [FRONTEND_INTEGRATION.md](../FRONTEND_INTEGRATION.md) in the project root.
+# DB → API Response Mapping
 
-# 📘 DB → API Response Mapping
+How database tables map to API JSON responses.
 
-* * *
+---
 
-## **1\. User Module**
+## 1. User Module
 
-### **GET /auth/profile**
+### GET /auth/profile
 
 **Response JSON**
-
 ```json
 {
-  "user_id": 1,
+  "id": 1,
   "name": "Karim Ahmed",
-  "phone": "01711111111",
-  "role": "passenger"
+  "phone": "+8801711111111",
+  "role": "passenger",
+  "is_active": true,
+  "created_at": "2025-11-28T10:00:00",
+  "updated_at": "2025-11-28T10:00:00"
 }
 ```
 
 | JSON Field | DB Table | DB Column | Notes |
-| --- | --- | --- | --- |
-| user_id | users | id  | Primary key |
+|------------|----------|-----------|-------|
+| id | users | id | Primary key |
 | name | users | name | Full name |
-| phone | users | phone | Login phone |
+| phone | users | phone | International format (+880...) |
 | role | users | role | Enum: passenger/supervisor/owner |
+| is_active | users | is_active | Account status |
+| created_at | users | created_at | Registration timestamp |
+| updated_at | users | updated_at | Last profile update |
 
-* * *
+---
 
-## **2\. Bus Module**
+## 2. Bus Module
 
-### **GET /buses (search results)**
+### GET /buses (search results)
 
 **Response JSON**
-
 ```json
 [
   {
-    "bus_id": 2,
+    "id": 2,
+    "bus_number": "AC-30266",
     "route_from": "Dhaka",
-    "route_to": "Sylhet",
-    "departure_time": "2025-10-05T09:30:00",
+    "route_to": "Chittagong",
+    "departure_time": "2025-12-10T08:00:00",
     "bus_type": "AC",
-    "fare": 700,
-    "available_seats": 36
+    "fare": "800.00",
+    "available_seats": 36,
+    "is_active": true
   }
 ]
 ```
 
 | JSON Field | DB Table | DB Column | Notes |
-| --- | --- | --- | --- |
-| bus_id | buses | id  | Primary key |
+|------------|----------|-----------|-------|
+| id | buses | id | Primary key |
+| bus_number | buses | bus_number | Max 20 characters |
 | route_from | buses | route_from | Start point |
 | route_to | buses | route_to | End point |
-| departure_time | buses | departure_time | Timestamp |
-| bus_type | buses | bus_type | Enum |
-| fare | buses | fare | Price per seat |
-| available_seats | buses | available_seats | Auto-updated by tickets |
+| departure_time | buses | departure_time | ISO 8601 timestamp |
+| bus_type | buses | bus_type | Enum: AC/Non-AC/AC Sleeper |
+| fare | buses | fare | Decimal as string |
+| available_seats | buses | available_seats | Auto-updated |
+| is_active | buses | is_active | Soft delete flag |
 
-### **GET /buses/{id} (full details)**
+### GET /buses/{id} (full details)
 
 **Response JSON**
-
 ```json
 {
-  "bus_id": 2,
-  "bus_number": "DB-5678",
+  "id": 2,
+  "bus_number": "AC-30266",
   "route_from": "Dhaka",
-  "route_to": "Sylhet",
-  "departure_time": "2025-10-05T09:30:00",
+  "route_to": "Chittagong",
+  "departure_time": "2025-12-10T08:00:00",
   "bus_type": "AC",
-  "fare": 700,
-  "seat_capacity": 36,
+  "fare": "800.00",
+  "seat_capacity": 40,
   "available_seats": 36,
-  "supervisor_name": "Rahim Uddin",
-  "supervisor_phone": "01710000001",
+  "owner_id": 23,
+  "supervisor": {
+    "id": 24,
+    "name": "Rahim Uddin",
+    "phone": "+8801710000001"
+  },
   "boarding_points": [
-    {"id": 4, "name": "Airport", "lat": 23.8493, "lng": 90.4195},
-    {"id": 5, "name": "Uttara", "lat": 23.8767, "lng": 90.3798},
-    {"id": 6, "name": "Gazipur", "lat": 23.9999, "lng": 90.4203}
+    {
+      "id": 4,
+      "bus_id": 2,
+      "name": "Mohakhali Terminal",
+      "lat": "23.77990000",
+      "lng": "90.40830000",
+      "sequence_order": 1,
+      "created_at": "2025-11-28T10:00:00"
+    }
   ],
-  "live_location": {"lat": 23.8103, "lng": 90.4125}
+  "current_lat": "23.8103",
+  "current_lng": "90.4125",
+  "last_location_update": "2025-11-28T11:30:00",
+  "is_active": true,
+  "created_at": "2025-11-28T10:00:00",
+  "updated_at": "2025-11-28T10:00:00"
 }
 ```
 
 | JSON Field | DB Table | DB Column | Notes |
-| --- | --- | --- | --- |
-| bus_id | buses | id  | PK  |
-| bus_number | buses | bus_number | Plate |
-| route_from | buses | route_from | Start point |
-| route_to | buses | route_to | End point |
-| departure_time | buses | departure_time | Timestamp |
-| bus_type | buses | bus_type | Enum |
-| fare | buses | fare | Price per seat |
+|------------|----------|-----------|-------|
+| id | buses | id | PK |
+| bus_number | buses | bus_number | Unique identifier |
 | seat_capacity | buses | seat_capacity | Total seats |
-| available_seats | buses | available_seats | Remaining seats |
-| supervisor_name | users | name | Role = supervisor |
-| supervisor_phone | users | phone | Supervisor contact |
-| boarding_points | boarding_points | id,name,lat,lng | Ordered by sequence_order |
-| live_location.lat/lng | buses | current_lat/current_lng | Updated via WebSocket |
+| owner_id | buses | owner_id | FK to users |
+| supervisor | users | id, name, phone | Joined from supervisor_id FK |
+| boarding_points | boarding_points | * | Array of stops, ordered by sequence_order |
+| current_lat | buses | current_lat | Updated by supervisor |
+| current_lng | buses | current_lng | Updated by supervisor |
+| last_location_update | buses | last_location_update | GPS timestamp |
 
-* * *
+---
 
-## **3\. Booking Module**
+## 3. Booking Module
 
-### **GET /booking/requests**
+### GET /booking/requests
 
 **Response JSON**
-
 ```json
 [
   {
-    "booking_id": 1,
-    "bus_id": 1,
+    "id": 1,
+    "bus_id": 2,
     "status": "pending",
-    "request_time": "2025-10-05T07:45:00"
+    "request_time": "2025-11-28T10:00:00"
   }
 ]
 ```
 
 | JSON Field | DB Table | DB Column | Notes |
-| --- | --- | --- | --- |
-| booking_id | bookings | id  | PK  |
+|------------|----------|-----------|-------|
+| id | bookings | id | Booking ID |
 | bus_id | bookings | bus_id | FK to buses |
-| status | bookings | status | pending/accepted/rejected |
-| request_time | bookings | request_time | Timestamp |
+| status | bookings | status | pending/accepted/rejected/cancelled |
+| request_time | bookings | request_time | When booking requested |
 
-### **POST /ticket/confirm**
+**Note:** Passenger details (passenger_id, name, phone) only included after acceptance.
+
+### POST /booking/ticket/confirm
 
 **Response JSON**
-
 ```json
 {
-  "ticket_id": 2,
-  "status": "confirmed"
+  "id": 1,
+  "booking_id": 1,
+  "seat_numbers": "A1, A2",
+  "boarding_point": {
+    "id": 4,
+    "name": "Mohakhali Terminal"
+  },
+  "fare_per_seat": "800.00",
+  "total_fare": "1600.00",
+  "status": "confirmed",
+  "created_at": "2025-11-28T10:30:00"
 }
 ```
 
 | JSON Field | DB Table | DB Column | Notes |
-| --- | --- | --- | --- |
-| ticket_id | tickets | id  | PK  |
-| status | tickets | status | confirmed |
+|------------|----------|-----------|-------|
+| id | tickets | id | Ticket ID |
+| booking_id | tickets | booking_id | FK to bookings |
+| seat_numbers | tickets | seat_numbers | Comma-separated string |
+| boarding_point | boarding_points | id, name | Joined from boarding_point_id FK |
+| fare_per_seat | tickets | fare_per_seat | Copied from bus.fare |
+| total_fare | tickets | total_fare | Auto-calculated |
+| status | tickets | status | confirmed/completed/cancelled |
+| created_at | tickets | created_at | Ticket issue time |
 
-### **GET /tickets/mine**
+### GET /booking/tickets/mine
 
 **Response JSON**
-
 ```json
 [
   {
-    "ticket_id": 2,
-    "bus_id": 2,
-    "departure_time": "2025-10-05T09:30:00",
-    "boarding_point": "Airport",
-    "seats_booked": 2
+    "id": 1,
+    "booking_id": 1,
+    "bus": {
+      "id": 2,
+      "bus_number": "AC-30266",
+      "route_from": "Dhaka",
+      "route_to": "Chittagong",
+      "departure_time": "2025-12-10T08:00:00"
+    },
+    "boarding_point": {
+      "id": 4,
+      "name": "Mohakhali Terminal",
+      "lat": "23.77990000",
+      "lng": "90.40830000"
+    },
+    "seat_numbers": "A1, A2",
+    "total_fare": "1600.00",
+    "status": "confirmed",
+    "created_at": "2025-11-28T10:30:00"
   }
 ]
 ```
 
 | JSON Field | DB Table | DB Column | Notes |
-| --- | --- | --- | --- |
-| ticket_id | tickets | id  | PK  |
-| bus_id | bookings → buses | bookings.bus_id | FK  |
-| departure_time | buses | departure_time | Timestamp |
-| boarding_point | boarding_points | name | Selected boarding stop |
-| seats_booked | tickets | seats_booked | Integer |
+|------------|----------|-----------|-------|
+| id | tickets | id | PK |
+| booking_id | tickets | booking_id | FK to bookings |
+| bus.* | buses | * | Joined via bookings.bus_id |
+| boarding_point.* | boarding_points | * | Joined via tickets.boarding_point_id |
+| seat_numbers | tickets | seat_numbers | Selected seats |
+| total_fare | tickets | total_fare | Calculated fare |
+| status | tickets | status | Ticket status |
 
-* * *
+---
 
-## **4\. Owner Module**
+## 4. Owner Module
 
-### **GET /owner/dashboard**
+### GET /owner/dashboard
 
 **Response JSON**
-
 ```json
 {
   "total_buses": 4,
   "active_trips": 3,
   "total_bookings": 5,
-  "total_revenue": 3500
+  "confirmed_bookings": 3,
+  "pending_bookings": 2,
+  "total_revenue": 3500.00,
+  "today_revenue": 800.00,
+  "dashboard_date": "2025-11-28T12:00:00"
 }
 ```
 
-| JSON Field | DB Table | DB Column | Notes |
-| --- | --- | --- | --- |
-| total_buses | buses | COUNT(\*) | All active buses |
-| active_trips | buses | COUNT(\*) WHERE departure_time = today | Active trips |
-| total_bookings | bookings | COUNT(\*) | All bookings |
-| total_revenue | tickets | SUM(total_fare) WHERE status=‘confirmed’ | Total revenue |
+| JSON Field | Calculation | Notes |
+|------------|-------------|-------|
+| total_buses | `SELECT COUNT(*) FROM buses WHERE owner_id = ? AND is_active = true` | Owner's active buses |
+| active_trips | `COUNT(*) WHERE departure_time = today` | Today's trips |
+| total_bookings | `COUNT(*) FROM bookings WHERE bus_id IN (owner's buses)` | All bookings |
+| confirmed_bookings | `COUNT(*) WHERE status = 'accepted'` | Accepted bookings |
+| pending_bookings | `COUNT(*) WHERE status = 'pending'` | Pending bookings |
+| total_revenue | `SUM(total_fare) FROM tickets WHERE status = 'confirmed'` | Total earnings |
+| today_revenue | `SUM(total_fare) WHERE created_at = today` | Today's earnings |
 
-### **GET /owner/buses**
+### GET /owner/supervisors
 
 **Response JSON**
-
 ```json
 [
   {
-    "bus_id": 2,
-    "bus_number": "DB-5678",
-    "supervisor_name": "Rahim Uddin",
-    "bookings_count": 2
+    "id": 24,
+    "name": "Rahim Uddin",
+    "phone": "+8801710000001",
+    "is_active": true,
+    "assigned_buses": [
+      {
+        "id": 2,
+        "bus_number": "AC-30266"
+      }
+    ]
   }
 ]
 ```
 
 | JSON Field | DB Table | DB Column | Notes |
-| --- | --- | --- | --- |
-| bus_id | buses | id  | PK  |
-| bus_number | buses | bus_number | Plate |
-| supervisor_name | users | name (supervisor) | FK  |
-| bookings_count | bookings | COUNT(\*) | Related bookings |
+|------------|----------|-----------|-------|
+| id | users | id | Supervisor ID |
+| name | users | name | Supervisor name |
+| phone | users | phone | Contact number |
+| is_active | users | is_active | Account status |
+| assigned_buses | buses | id, bus_number | WHERE supervisor_id = supervisor.id |
 
-* * *
+---
 
-&nbsp;
+## 5. Location Module
+
+### POST /location/bus/{id}/update
+
+**Request:** Query params `?lat=23.81&lng=90.41`
+
+**Updates:**
+```sql
+UPDATE buses 
+SET current_lat = ?, 
+    current_lng = ?,
+    last_location_update = NOW()
+WHERE id = ?
+```
+
+### GET /location/boarding-points/{id}/nearby
+
+**Response JSON**
+```json
+{
+  "boarding_point_id": 4,
+  "boarding_point_name": "Mohakhali Terminal",
+  "boarding_point_location": {
+    "lat": 23.7799,
+    "lng": 90.4083
+  },
+  "search_radius": 1000,
+  "place_type": "restaurant",
+  "nearby_places": [
+    {
+      "name": "Cinnamon",
+      "lat": 23.7802773,
+      "lng": 90.4067739,
+      "type": "restaurant",
+      "distance_m": 160,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Cinnamon"
+      }
+    }
+  ]
+}
+```
+
+**Sources:**
+- `boarding_point_*`: From `boarding_points` table
+- `nearby_places`: From OpenStreetMap Overpass API (not database)
+
+---
+
+## Key Relationships
+
+```
+users (owner) 
+  └── buses (owner_id FK)
+        ├── supervisor (supervisor_id FK → users)
+        ├── boarding_points (bus_id FK)
+        └── bookings (bus_id FK)
+              └── tickets (booking_id FK)
+                    └── boarding_point (boarding_point_id FK)
+```
+
+---
+
+**Last Updated:** November 28, 2025
