@@ -193,9 +193,12 @@ ws.onerror = (error) => {
 
 ---
 
-## 📝 Example Requests
+## 📝 Example Requests (UPDATED)
 
-### Register User
+### Register User (Passenger or Owner Only)
+
+**✅ Allowed Roles:** `passenger`, `owner`
+
 ```bash
 curl -X POST "https://web-production-9625a.up.railway.app/auth/register" \
   -H "Content-Type: application/json" \
@@ -208,71 +211,152 @@ curl -X POST "https://web-production-9625a.up.railway.app/auth/register" \
   }'
 ```
 
+**❌ Blocked: Supervisor Registration**
+
+```bash
+# This will return 403 Forbidden
+curl -X POST "https://web-production-9625a.up.railway.app/auth/register" \
+  -d '{"role": "supervisor", ...}'
+
+# Response:
+{
+  "detail": "Supervisors cannot self-register. Contact your bus company owner."
+}
+```
+
+---
+
+### Register Supervisor (Owner Only)
+
+**✅ Correct Way to Create Supervisor:**
+
+```bash
+curl -X POST "https://web-production-9625a.up.railway.app/owner/register-supervisor" \
+  -H "Authorization: Bearer OWNER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Supervisor",
+    "phone": "+8801888888888",
+    "password": "supervisor_password",
+    "nid": "9876543210987",
+    "role": "supervisor"
+  }'
+```
+
 **Response:**
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "token_type": "bearer",
-  "user": {
-    "id": 1,
-    "name": "John Doe",
-    "phone": "+8801712345678",
-    "role": "passenger"
+  "id": 2,
+  "name": "John Supervisor",
+  "phone": "+8801888888888",
+  "role": "supervisor",
+  "owner_id": 1,
+  "is_active": true,
+  "created_at": "2025-11-27T10:00:00"
+}
+```
+
+---
+
+### List Supervisors (Owner Only)
+
+**Security Feature:** Only returns supervisors YOU hired
+
+```bash
+curl "https://web-production-9625a.up.railway.app/owner/supervisors" \
+  -H "Authorization: Bearer OWNER_TOKEN"
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 2,
+    "name": "John Supervisor",
+    "phone": "+8801888888888",
+    "role": "supervisor",
+    "owner_id": 1,
+    "is_active": true,
+    "assigned_buses": [
+      {"id": 1, "bus_number": "DB-AC-001"}
+    ]
   }
-}
+]
 ```
 
-### Search Buses
-```bash
-curl "https://web-production-9625a.up.railway.app/buses?route_from=Dhaka&route_to=Chittagong"
-```
+**Note:** If another owner has supervisors, you WON'T see them.
 
-### Create Booking Request
+---
+
+### Create Bus with Supervisor Assignment
+
+**Validation:** Can only assign supervisors YOU own
+
 ```bash
-curl -X POST "https://web-production-9625a.up.railway.app/booking/request" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST "https://web-production-9625a.up.railway.app/buses" \
+  -H "Authorization: Bearer OWNER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "bus_id": 1
+    "bus_number": "DB-AC-001",
+    "route_from": "Dhaka",
+    "route_to": "Chittagong",
+    "departure_time": "2025-12-01T08:00:00",
+    "bus_type": "AC",
+    "fare": 1200,
+    "seat_capacity": 40,
+    "supervisor_id": 2
   }'
 ```
 
-**Response:**
+**Success Response (supervisor belongs to you):**
 ```json
 {
-  "booking_id": 1,
-  "status": "pending",
-  "message": "Booking request sent successfully"
+  "id": 1,
+  "bus_number": "DB-AC-001",
+  "supervisor_id": 2,
+  ...
 }
 ```
 
-### Accept Booking (Supervisor)
-```bash
-curl -X POST "https://web-production-9625a.up.railway.app/booking/accept" \
-  -H "Authorization: Bearer SUPERVISOR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "booking_id": 1
-  }'
+**Error Response (supervisor belongs to another owner):**
+```json
+{
+  "detail": "Cannot assign supervisor not hired by you"
+}
 ```
 
-### Confirm Ticket (Passenger)
-```bash
-curl -X POST "https://web-production-9625a.up.railway.app/booking/ticket/confirm" \
-  -H "Authorization: Bearer PASSENGER_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "booking_id": 1,
-    "seat_numbers": "A1, A2",
-    "boarding_point_id": 1
-  }'
-```
+---
 
-### Update Bus Location (Supervisor)
-```bash
-curl -X POST "https://web-production-9625a.up.railway.app/location/bus/1/update?lat=23.8103&lng=90.4125" \
-  -H "Authorization: Bearer SUPERVISOR_TOKEN"
-```
+## 🔒 Security Features (NEW)
+
+### Supervisor Ownership System
+
+**Problem Solved:** Prevents owners from seeing/assigning each other's supervisors
+
+**How It Works:**
+
+1. **Registration:**
+   - Supervisors CANNOT self-register via `/auth/register`
+   - Only owners can create supervisors via `/owner/register-supervisor`
+   - Supervisor automatically linked with `owner_id`
+
+2. **Listing:**
+   - `GET /owner/supervisors` filters by `owner_id = current_user.id`
+   - You only see YOUR supervisors
+
+3. **Assignment:**
+   - When creating/updating buses, backend validates supervisor ownership
+   - Cannot assign supervisors from other owners
+
+4. **Privacy:**
+   - Competing bus companies can't see each other's staff
+   - Each company operates independently
+
+**Real-World Example:**
+- Company A (Owner 1) has Supervisors 2, 3
+- Company B (Owner 4) has Supervisor 5
+- Owner 1 cannot assign Supervisor 5 to their buses
+- Owner 4 cannot see Supervisors 2, 3 in their list
 
 ---
 
