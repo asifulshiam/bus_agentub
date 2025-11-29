@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware
-
 from app.config import settings
 from app.routers import auth, bookings, buses, location, owner, websocket
 
@@ -14,11 +13,11 @@ app = FastAPI(
 )
 
 
-# Custom CORS middleware to handle all localhost origins
+# Custom CORS middleware to handle all localhost origins and Vercel deployments
 class FlexibleCORSMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         origin = request.headers.get("origin")
-
+        
         # Check if we should allow this origin
         is_allowed = False
         if origin:
@@ -27,10 +26,13 @@ class FlexibleCORSMiddleware(BaseHTTPMiddleware):
                 "http://127.0.0.1:"
             ):
                 is_allowed = True
+            # Allow all Vercel deployment URLs (*.vercel.app)
+            elif origin.endswith(".vercel.app"):
+                is_allowed = True
             # Also check against configured origins
             elif origin in settings.CORS_ORIGINS:
                 is_allowed = True
-
+        
         # Handle preflight OPTIONS requests
         if request.method == "OPTIONS":
             response = Response(status_code=200)
@@ -45,7 +47,7 @@ class FlexibleCORSMiddleware(BaseHTTPMiddleware):
                 )
                 response.headers["Access-Control-Max-Age"] = "3600"
             return response
-
+        
         # Handle actual requests
         response = await call_next(request)
         if is_allowed and origin:
@@ -57,7 +59,7 @@ class FlexibleCORSMiddleware(BaseHTTPMiddleware):
             response.headers["Access-Control-Allow-Headers"] = (
                 "Content-Type, Authorization, Accept"
             )
-
+        
         return response
 
 
