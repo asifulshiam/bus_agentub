@@ -7,8 +7,8 @@
 | Endpoint | Method | Auth | Purpose | Request | Response | Validation |
 |----------|--------|------|---------|---------|----------|------------|
 | `/auth/register` | POST | No | Register user | `{name, phone, password, nid, role}` | `{access_token, user: {id, name, phone, role}}` | phone: +880XXXXXXXXXX (14 chars)<br>password: min 8 chars<br>nid: exactly 13 digits<br>role: passenger/supervisor/owner |
-| `/auth/login` | POST | No | Login | `{phone, password}` | `{access_token, user: {id, name, phone, role}, assigned_buses?: [{bus_id, bus_number, route_from, route_to, departure_time}]}` | Returns JWT valid for 7 days<br>**NEW v6.1:** Supervisors get assigned_buses array |
-| `/auth/profile` | GET | Yes | Get profile | - | `{id, name, phone, role, is_active, created_at, updated_at, assigned_buses?: [...]}` | **NEW v6.1:** Supervisors see their assigned buses |
+| `/auth/login` | POST | No | Login | `{phone, password}` | `{access_token, user: {id, name, phone, role}, assigned_buses?: [{bus_id, bus_number, route_from, route_to, departure_time}]}` | Returns JWT valid for 7 days<br> Supervisors get assigned_buses array |
+| `/auth/profile` | GET | Yes | Get profile | - | `{id, name, phone, role, is_active, created_at, updated_at, assigned_buses?: [...]}` | Supervisors see their assigned buses |
 | `/auth/profile` | PUT | Yes | Update profile | `{name}` | `{id, name, phone, role, ...}` | - |
 
 ---
@@ -32,8 +32,8 @@
 | Endpoint | Method | Auth | Purpose | Request | Response | Notes |
 |----------|--------|------|---------|---------|----------|-------|
 | `/booking/request` | POST | Passenger | Create request | `{bus_id}` | `{booking_id, status: "pending", message}` | Creates pending booking |
-| `/booking/{booking_id}` | GET | Auth | Get booking by ID | - | `{id, passenger_id, bus_id, bus: {...}, status, request_time, ...}` | **NEW v6.1:** Check booking status for polling |
-| `/booking/my-requests` | GET | Passenger | Get all my bookings | Query: `?status=` | `[{id, bus_id, bus: {...}, status, request_time, ...}]` | **NEW v6.1:** All booking history, ordered by newest first |
+| `/booking/{booking_id}` | GET | Auth | Get booking by ID | - | `{id, passenger_id, bus_id, bus: {...}, status, request_time, ...}` | Check booking status for polling |
+| `/booking/my-requests` | GET | Passenger | Get all my bookings | Query: `?status=` | `[{id, bus_id, bus: {...}, status, request_time, ...}]` | All booking history, ordered by newest first |
 | `/booking/requests` | GET | Supervisor | View pending | Query: `?bus_id=` | `[{id, bus_id, status, request_time}]` | No passenger details until accepted |
 | `/booking/accept` | POST | Supervisor | Accept booking | Body: `{booking_id}` | `{booking_id, status: "accepted", passenger details...}` | **booking_id in body, not URL** |
 | `/booking/reject` | POST | Supervisor | Reject booking | Body: `{booking_id}` | `{booking_id, status: "rejected"}` | **booking_id in body, not URL** |
@@ -176,13 +176,13 @@ curl -X POST "https://web-production-9625a.up.railway.app/booking/accept" \
   -d '{"booking_id": 1}'
 ```
 
-### 5. Check Booking Status (NEW v6.1 - Polling)
+### 5. Check Booking Status (Polling)
 ```bash
 curl "https://web-production-9625a.up.railway.app/booking/1" \
   -H "Authorization: Bearer PASSENGER_TOKEN"
 ```
 
-### 6. Get My Booking History (NEW v6.1)
+### 6. Get My Booking History
 ```bash
 curl "https://web-production-9625a.up.railway.app/booking/my-requests" \
   -H "Authorization: Bearer PASSENGER_TOKEN"
