@@ -161,11 +161,6 @@ View revenue reports → Track all operations
    - Sarah gets notification: "Booking accepted!"
    - Sarah now sees: Boarding points list, full bus details
 
-3.5. **Sarah's app polls** for status:
-   - Every 5 seconds: Check if booking accepted
-   - System automatically shows boarding points when status changes
-   - No manual refresh needed
-
 4. **Sarah confirms** ticket:
    - Chooses: 2 seats, Mohakhali boarding point
    - System generates ticket with total fare
