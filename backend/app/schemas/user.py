@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -108,6 +108,7 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+    assigned_buses: Optional[List[Dict[str, Any]]] = None  # ← ADD THIS LINE
 
     class Config:
         json_schema_extra = {

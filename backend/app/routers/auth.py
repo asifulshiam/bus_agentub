@@ -33,7 +33,7 @@ def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
     - **role**: User role (passenger/owner only - supervisors must be registered by owners)
 
     Returns JWT token and user data
-    
+
     Note: Supervisors cannot self-register. They must be registered by a bus owner
     via the /owner/register-supervisor endpoint.
     """
@@ -124,19 +124,72 @@ def login_user(login_data: UserLogin, db: Session = Depends(get_db)):
     # Convert to response schema
     user_response = UserResponse.model_validate(user)
 
+    # Get assigned buses for supervisors
+    assigned_buses = []
+    if user.role.value == "supervisor":
+        from app.models.bus import Bus
+
+        buses = (
+            db.query(Bus)
+            .filter(Bus.supervisor_id == user.id, Bus.is_active == True)
+            .all()
+        )
+
+        assigned_buses = [
+            {
+                "id": bus.id,
+                "bus_number": bus.bus_number,
+                "route_from": bus.route_from,
+                "route_to": bus.route_to,
+                "departure_time": bus.departure_time,
+            }
+            for bus in buses
+        ]
+
     return TokenResponse(
-        access_token=access_token, token_type="bearer", user=user_response
+        access_token=access_token,
+        token_type="bearer",
+        user=user_response,
+        assigned_buses=assigned_buses if user.role.value == "supervisor" else None,
     )
 
 
-@router.get("/profile", response_model=UserResponse)
-def get_profile(current_user: User = Depends(get_current_user)):
-    """
-    Get current user's profile
+@router.get("/profile")
+async def get_profile(
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    # Get assigned buses for supervisors
+    assigned_buses = []
+    if current_user.role == "supervisor":
+        from app.models import Bus
 
-    Requires authentication (Bearer token in Authorization header)
-    """
-    return UserResponse.model_validate(current_user)
+        buses = (
+            db.query(Bus)
+            .filter(Bus.supervisor_id == current_user.id, Bus.is_active == True)
+            .all()
+        )
+
+        assigned_buses = [
+            {
+                "id": bus.id,
+                "bus_number": bus.bus_number,
+                "route_from": bus.route_from,
+                "route_to": bus.route_to,
+                "departure_time": bus.departure_time,
+            }
+            for bus in buses
+        ]
+
+    return {
+        "id": current_user.id,
+        "name": current_user.name,
+        "phone": current_user.phone,
+        "role": current_user.role,
+        "is_active": current_user.is_active,
+        "created_at": current_user.created_at,
+        "updated_at": current_user.updated_at,
+        "assigned_buses": assigned_buses if current_user.role == "supervisor" else None,
+    }
 
 
 @router.put("/profile", response_model=UserResponse)
