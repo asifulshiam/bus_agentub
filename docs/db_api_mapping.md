@@ -86,8 +86,6 @@ How database tables map to API JSON responses.
 }
 ```
 
-**Note:** `assigned_buses` field added for supervisors in v6.1
-
 ---
 
 ## 2. Bus Module
