@@ -88,7 +88,7 @@ View revenue reports → Track all operations
 - Supervisor management system
 - Complete ownership verification (supervisors can't self-register)
 
-### Real-Time Status Updates (New)
+### Real-Time Status Updates
 - Passengers can poll booking status to detect approval
 - Supervisors receive their assigned buses on login
 - No manual refresh needed for status changes
