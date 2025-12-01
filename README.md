@@ -88,6 +88,12 @@ View revenue reports → Track all operations
 - Supervisor management system
 - Complete ownership verification (supervisors can't self-register)
 
+### Real-Time Status Updates (New)
+- Passengers can poll booking status to detect approval
+- Supervisors receive their assigned buses on login
+- No manual refresh needed for status changes
+- Frontend implements 5-10 second polling for real-time feel
+
 ---
 
 ## User Roles Explained
@@ -154,6 +160,11 @@ View revenue reports → Track all operations
    - System reveals: Sarah's name and phone to Ahmed
    - Sarah gets notification: "Booking accepted!"
    - Sarah now sees: Boarding points list, full bus details
+
+3.5. **Sarah's app polls** for status:
+   - Every 5 seconds: Check if booking accepted
+   - System automatically shows boarding points when status changes
+   - No manual refresh needed
 
 4. **Sarah confirms** ticket:
    - Chooses: 2 seats, Mohakhali boarding point

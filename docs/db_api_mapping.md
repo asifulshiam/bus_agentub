@@ -31,6 +31,63 @@ How database tables map to API JSON responses.
 | created_at | users | created_at | Registration timestamp |
 | updated_at | users | updated_at | Last profile update |
 
+### POST /auth/login
+
+**Response JSON (Supervisor)**
+```json
+{
+  "access_token": "eyJ...",
+  "token_type": "bearer",
+  "user": {
+    "id": 24,
+    "name": "Rahim Uddin",
+    "phone": "+8801710000001",
+    "role": "supervisor"
+  },
+  "assigned_buses": [
+    {
+      "bus_id": 2,
+      "bus_number": "AC-30266",
+      "route_from": "Dhaka",
+      "route_to": "Chittagong",
+      "departure_time": "2025-12-10T08:00:00"
+    }
+  ]
+}
+```
+
+| JSON Field | DB Table | DB Column | Notes |
+|------------|----------|-----------|-------|
+| assigned_buses | buses | id, bus_number, route_from, route_to, departure_time | WHERE supervisor_id = current_user.id |
+
+**Note:** `assigned_buses` only included if user role is "supervisor"
+
+### GET /auth/profile
+
+**Response JSON (Supervisor)**
+```json
+{
+  "id": 24,
+  "name": "Rahim Uddin",
+  "phone": "+8801710000001",
+  "role": "supervisor",
+  "is_active": true,
+  "created_at": "2025-11-28T10:00:00",
+  "updated_at": "2025-11-28T10:00:00",
+  "assigned_buses": [
+    {
+      "bus_id": 2,
+      "bus_number": "AC-30266",
+      "route_from": "Dhaka",
+      "route_to": "Chittagong",
+      "departure_time": "2025-12-10T08:00:00"
+    }
+  ]
+}
+```
+
+**Note:** `assigned_buses` field added for supervisors in v6.1
+
 ---
 
 ## 2. Bus Module
@@ -144,6 +201,79 @@ How database tables map to API JSON responses.
 | request_time | bookings | request_time | When booking requested |
 
 **Note:** Passenger details (passenger_id, name, phone) only included after acceptance.
+
+### GET /booking/{booking_id}
+
+**Response JSON**
+```json
+{
+  "id": 1,
+  "passenger_id": 5,
+  "bus_id": 2,
+  "bus": {
+    "id": 2,
+    "bus_number": "AC-30266",
+    "route_from": "Dhaka",
+    "route_to": "Chittagong",
+    "departure_time": "2025-12-10T08:00:00",
+    "fare": "800.00"
+  },
+  "status": "accepted",
+  "request_time": "2025-11-28T10:00:00",
+  "accepted_time": "2025-11-28T10:15:00"
+}
+```
+
+| JSON Field | DB Table | DB Column | Notes |
+|------------|----------|-----------|-------|
+| id | bookings | id | Booking ID |
+| passenger_id | bookings | passenger_id | FK to users |
+| bus_id | bookings | bus_id | FK to buses |
+| bus.* | buses | * | Joined data |
+| status | bookings | status | Current booking status |
+| request_time | bookings | request_time | When requested |
+| accepted_time | bookings | accepted_time | When accepted (if applicable) |
+
+**Use Case:** Passenger polling to detect when supervisor accepts booking
+
+### GET /booking/my-requests
+
+**Response JSON**
+```json
+[
+  {
+    "id": 3,
+    "passenger_id": 5,
+    "bus_id": 2,
+    "bus": {
+      "id": 2,
+      "bus_number": "AC-30266",
+      "route_from": "Dhaka",
+      "route_to": "Chittagong",
+      "departure_time": "2025-12-10T08:00:00"
+    },
+    "status": "pending",
+    "request_time": "2025-11-28T12:00:00"
+  },
+  {
+    "id": 1,
+    "bus_id": 2,
+    "status": "confirmed",
+    "request_time": "2025-11-28T10:00:00"
+  }
+]
+```
+
+| JSON Field | DB Table | DB Column | Notes |
+|------------|----------|-----------|-------|
+| id | bookings | id | Booking ID |
+| passenger_id | bookings | passenger_id | Current user's ID |
+| bus.* | buses | * | Joined via bus_id |
+| status | bookings | status | All statuses included |
+
+**Query:** `SELECT * FROM bookings WHERE passenger_id = ? ORDER BY request_time DESC`
+
+**Use Case:** Passenger viewing complete booking history, includes all statuses
 
 ### POST /booking/ticket/confirm
 

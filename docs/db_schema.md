@@ -13,7 +13,7 @@ Complete database structure and relationships.
 | `phone` | VARCHAR(14) UNIQUE | Login credential | Input on registration/login (`+880XXXXXXXXXX`) | Returned in profile |
 | `password_hash` | VARCHAR(255) | Encrypted password | Sent as `password` → hashed by backend | ❌ Never returned |
 | `nid` | VARCHAR(13) | National ID (13 digits) | Input on signup | ❌ Never returned (privacy) |
-| `role` | ENUM | User type | Sent in registration: `passenger`, `supervisor`, `owner` | Returned in profile |
+| `role` | ENUM | User type | Sent in registration: `passenger`, `supervisor`, `owner` | Returned in profile<br>**NEW v6.1:** Login returns `assigned_buses` array for supervisors |
 | `owner_id` | INT FK → users(id) | Supervisor's owner | Set by backend when owner registers supervisor | Backend only |
 | `is_active` | BOOLEAN | Account enabled | — | Returned in some endpoints |
 | `created_at` | TIMESTAMP | Registration time | — | Returned in profile |
@@ -26,6 +26,11 @@ Complete database structure and relationships.
 - `phone` must be unique
 - `supervisor` role must have `owner_id` (cannot be null)
 - `owner` and `passenger` roles have null `owner_id`
+
+**NEW Access Patterns (v6.1):**
+- Supervisors receive `assigned_buses` array on login
+- Supervisors see assigned buses in profile endpoint
+- Query: `SELECT * FROM buses WHERE supervisor_id = user.id`
 
 ---
 
@@ -43,7 +48,7 @@ Complete database structure and relationships.
 | `seat_capacity` | INT | Total seats | Input on bus add | Returned in bus details |
 | `available_seats` | INT | Seats remaining | Auto-managed by triggers/code | Returned in search |
 | `owner_id` | INT FK → users(id) | Bus owner | Auto-set from authenticated owner | Backend only |
-| `supervisor_id` | INT FK → users(id) | Assigned supervisor | Input when creating bus | Returned as supervisor object |
+| `supervisor_id` | INT FK → users(id) | Assigned supervisor | Input when creating bus | Returned as supervisor object<br>**v6.1:** Included in supervisor login response |
 | `current_lat` | DECIMAL(10,8) | Live GPS latitude | Updated by supervisor via API | Returned in location endpoints |
 | `current_lng` | DECIMAL(11,8) | Live GPS longitude | Updated by supervisor via API | Returned in location endpoints |
 | `last_location_update` | TIMESTAMP | Last GPS ping | Auto-set on location update | Returned in location endpoints |
@@ -110,6 +115,20 @@ accepted → cancelled
 **Privacy Rule:**
 - Supervisor sees only booking existence when status = `pending`
 - Supervisor sees passenger details only when status = `accepted`
+
+**New Access Patterns (v6.1):**
+
+**GET /booking/{booking_id}:**
+- Returns single booking by ID
+- Includes joined bus data
+- Used for status polling by passengers
+- Query: `SELECT * FROM bookings WHERE id = ? AND passenger_id = ?`
+
+**GET /booking/my-requests:**
+- Returns all bookings for current passenger
+- Ordered by `request_time DESC` (newest first)
+- Includes all statuses: pending, accepted, confirmed, rejected, cancelled
+- Query: `SELECT * FROM bookings WHERE passenger_id = ? ORDER BY request_time DESC`
 
 ---
 
@@ -203,6 +222,28 @@ Updates buses.current_lat, current_lng, last_location_update
 Passengers receive via WebSocket /ws/location/{bus_id}
 ```
 
+### 6. Status Polling (NEW v6.1)
+```
+Passenger → POST /booking/request → booking created
+          ↓
+Passenger → Polls GET /booking/{id} every few seconds
+          ↓
+          → Detects status change from 'pending' to 'accepted'
+          ↓
+Passenger → Proceeds to POST /booking/ticket/confirm
+```
+
+**Alternative:** Passenger uses GET /booking/my-requests to see all bookings at once
+
+### 7. Supervisor Login Flow (NEW v6.1)
+```
+Supervisor → POST /auth/login
+          ↓
+Backend → Queries buses WHERE supervisor_id = user.id
+          ↓
+Returns: {access_token, user: {...}, assigned_buses: [{bus_id, bus_number, ...}]}
+```
+
 ---
 
 ## Indexes
@@ -211,10 +252,10 @@ Passengers receive via WebSocket /ws/location/{bus_id}
 - `users.phone` (UNIQUE) - Fast login lookup
 - `users.role` - Role-based queries
 - `buses.owner_id` - Owner's buses lookup
-- `buses.supervisor_id` - Supervisor's assigned buses
+- `buses.supervisor_id` - Supervisor's assigned buses (v6.1 enhanced)
 - `buses.departure_time` - Date-based searches
 - `buses.route_from, route_to` - Route searches
-- `bookings.passenger_id` - Passenger's bookings
+- `bookings.passenger_id` - Passenger's bookings (v6.1 enhanced for my-requests)
 - `bookings.bus_id` - Bus bookings
 - `bookings.status` - Status filtering
 - `tickets.booking_id` - Ticket lookup
@@ -239,4 +280,3 @@ Passengers receive via WebSocket /ws/location/{bus_id}
 
 ---  
 **Database:** PostgreSQL 16  
-**Schema Version:** 1.0
