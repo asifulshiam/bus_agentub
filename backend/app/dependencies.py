@@ -114,3 +114,28 @@ def get_current_owner(current_user: User = Depends(get_current_user)) -> User:
             detail="Only owners can access this endpoint",
         )
     return current_user
+
+
+def require_owner_or_supervisor(
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> User:
+    """
+    Dependency to require user to be either owner or supervisor.
+    Used for endpoints that both roles should access with filtered data.
+
+    Args:
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        User object if role is owner or supervisor
+
+    Raises:
+        HTTPException: If user is not owner or supervisor
+    """
+    if current_user.role.value not in ["owner", "supervisor"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Owner or Supervisor role required.",
+        )
+    return current_user

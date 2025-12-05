@@ -6,7 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_owner
+from app.dependencies import get_current_owner, require_owner_or_supervisor
 from app.models.boarding_point import BoardingPoint
 from app.models.booking import Booking, BookingStatus
 from app.models.bus import Bus
@@ -171,23 +171,32 @@ def get_ticket_sales_report(
     from_date: Optional[date] = Query(None, description="Start date for report"),
     to_date: Optional[date] = Query(None, description="End date for report"),
     bus_id: Optional[int] = Query(None, description="Filter by specific bus"),
-    current_user: User = Depends(get_current_owner),
+    current_user: User = Depends(require_owner_or_supervisor),  # ← CHANGED
     db: Session = Depends(get_db),
 ):
     """
-    Get ticket sales report (OWNER only)
+    Get ticket sales report (OWNER and SUPERVISOR)
+    
+    - Owners see tickets from ALL their buses
+    - Supervisors see tickets ONLY from their assigned buses
 
     Returns revenue breakdown by bus and date range.
     """
-    # Build query for tickets
+    # Build base query for tickets
     query = (
         db.query(Ticket)
         .join(Booking)
         .join(Bus)
-        .filter(
-            Bus.owner_id == current_user.id, Ticket.status == TicketStatus.confirmed
-        )
+        .filter(Ticket.status == TicketStatus.confirmed)
     )
+    
+    # Apply role-based filtering
+    if current_user.role.value == "supervisor":
+        # Supervisor: Only see tickets from their assigned buses
+        query = query.filter(Bus.supervisor_id == current_user.id)
+    elif current_user.role.value == "owner":
+        # Owner: See tickets from all their buses
+        query = query.filter(Bus.owner_id == current_user.id)
 
     # Apply date filters
     if from_date:
@@ -201,12 +210,20 @@ def get_ticket_sales_report(
     # Apply bus filter
     if bus_id:
         query = query.filter(Bus.id == bus_id)
-        # Verify owner has access to this bus
-        bus = (
-            db.query(Bus)
-            .filter(Bus.id == bus_id, Bus.owner_id == current_user.id)
-            .first()
-        )
+        # Verify user has access to this bus
+        if current_user.role.value == "owner":
+            bus = (
+                db.query(Bus)
+                .filter(Bus.id == bus_id, Bus.owner_id == current_user.id)
+                .first()
+            )
+        else:  # supervisor
+            bus = (
+                db.query(Bus)
+                .filter(Bus.id == bus_id, Bus.supervisor_id == current_user.id)
+                .first()
+            )
+        
         if not bus:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
