@@ -53,7 +53,12 @@
 | `/owner/supervisors` | GET | Owner | List supervisors | - | `[{id, name, phone, is_active, assigned_buses: [...]}]` |
 | `/owner/buses` | GET | Owner | List buses | - | `[{id, bus_number, route_from, route_to, supervisor, ...}]` |
 | `/owner/bookings` | GET | Owner | View bookings | - | `[{booking details...}]` |
-| `/owner/tickets` | GET | Owner | Sales report | Query: `?from=&to=` | `{total_revenue, total_tickets_sold, date_range, breakdown_by_bus, report_generated_at}` |
+| `/owner/tickets` | GET | Owner/Supervisor | Sales report | Query: `?from=&to=&bus_id=` | `{total_revenue, total_tickets_sold, date_range, breakdown_by_bus, report_generated_at}` |
+
+**Note:** 
+- Owners see tickets from ALL their buses
+- Supervisors see tickets ONLY from their assigned buses
+- Both roles use the same endpoint with automatic filtering
 
 ---
 

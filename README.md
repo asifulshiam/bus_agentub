@@ -120,6 +120,7 @@ View revenue reports → Track all operations
 - Update live bus GPS location
 - Manage boarding points
 - View passenger list with boarding sequence
+- View ticket sales report for their assigned buses
 
 **Cannot Do:**
 - Self-register (must be registered by owner)
